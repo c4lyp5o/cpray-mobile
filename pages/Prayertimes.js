@@ -12,7 +12,6 @@ import {
 import { Audio } from 'expo-av';
 import { getProfile } from '../lib/Profile';
 import {
-  getTimeDifference,
   timeReminder,
   intepretHijriDate,
   intepretChristDate,
@@ -34,14 +33,46 @@ const Timesdata = ({ data, zone }) => {
     console.log('Playing Sound');
     await sound.playAsync();
   };
-  const timeCalculator = async () => {
+  const firstInit = async (data) => {
+    // try {
+    //   const forToday = await timeReminder(data);
+    //   setTimeReminderData(forToday);
+    //   setLoading(false);
+    //   setInterval(() => {
+    //     playSound();
+    //     setIsPlaying(false);
+    //   }, timeReminderData.nextSolah.milliseconds);
+    // } catch (error) {
+    //   console.log(error);
+    // }
+    timeReminder(data)
+      .then((timeReminderData) => {
+        setTimeReminderData(timeReminderData);
+        setLoading(false);
+        // setInterval(() => {
+        //   playSound();
+        //   setIsPlaying(false);
+        // }, timeReminderData.nextSolah.milliseconds);
+        console.log(timeReminderData);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+  const intervalCheck = async (data) => {
     try {
-      const forToday = await timeReminder(data);
-      setTimeReminderData(forToday);
-      setLoading(false);
+      setTimeNow(new Date());
+      const forThisMoment = await timeReminder(data);
+      setTimeReminderData(forThisMoment);
     } catch (error) {
       console.log(error);
     }
+  };
+  const theTimer = setInterval(() => {
+    intervalCheck(data);
+  }, 30000);
+  const stopCounter = () => {
+    clearInterval(theTimer);
   };
   const fuselage = (reminder) => {
     console.log(reminder);
@@ -51,26 +82,29 @@ const Timesdata = ({ data, zone }) => {
     }
   };
   useEffect(() => {
-    timeReminder(data).then((timeReminderData) => {
-      setTimeReminderData(timeReminderData);
-      setLoading(false);
-      setInterval(() => {
-        playSound();
-        setIsPlaying(false);
-      }, timeReminderData.nextSolah.milliseconds);
-    });
-    setInterval(() => {
-      setTimeNow(new Date());
-      timeReminder(data)
-        .then((timeReminderData) => {
-          setTimeReminderData(timeReminderData);
-          console.log(timeReminderData);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }, 30000);
-  }, []);
+    // timeReminder(data).then((timeReminderData) => {
+    //   setTimeReminderData(timeReminderData);
+    //   setLoading(false);
+    //   setInterval(() => {
+    //     playSound();
+    //     setIsPlaying(false);
+    //   }, timeReminderData.nextSolah.milliseconds);
+    //   console.log(timeReminderData);
+    // });
+    firstInit(data);
+    // prevInt = setInterval(() => {
+    //   console.log('running new interval:' + prevInt);
+    //   setTimeNow(new Date());
+    //   timeReminder(data)
+    //     .then((timeReminderData) => {
+    //       setTimeReminderData(timeReminderData);
+    //       console.log(timeReminderData, prevInt);
+    //     })
+    //     .catch((error) => {
+    //       console.log(error);
+    //     });
+    // }, 30000);
+  }, [zone]);
   if (loading) {
     return <Text>Loading...</Text>;
   }
@@ -387,25 +421,23 @@ const Timesdata = ({ data, zone }) => {
   );
 };
 
-export default function Prayertimes({ route }) {
-  const { theZone } = route.params;
+export default function Prayertimes({ route, zone }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const fetchData = async () => {
-    try {
-      const response = await fetch(
-        `https://api.waktusolat.me/waktusolat/week/${theZone}`
-      );
-      const json = await response.json();
-      setData(json);
-      setLoading(false);
-    } catch (error) {
-      setError(error);
-      setLoading(false);
-    }
-  };
   useEffect(() => {
+    const fetchData = () => {
+      fetch(`https://api.waktusolat.me/waktusolat/week/${zone}`)
+        .then((response) => response.json())
+        .then((json) => {
+          setData(json);
+          setLoading(false);
+        })
+        .catch((error) => {
+          setError(error);
+          setLoading(false);
+        });
+    };
     fetchData();
   }, []);
   if (loading) {
@@ -414,9 +446,5 @@ export default function Prayertimes({ route }) {
   if (error) {
     return <Text>Error: {error.message}</Text>;
   }
-  return (
-    <Box>
-      <Timesdata data={data} zone={theZone} />
-    </Box>
-  );
+  return <Box>{data && <Timesdata data={data} zone={zone} />}</Box>;
 }

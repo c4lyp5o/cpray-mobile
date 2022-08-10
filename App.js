@@ -25,6 +25,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { NavigationContainer } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import About from './pages/About';
 import Settings from './pages/Settings';
 import Prayertimes from './pages/Prayertimes';
@@ -34,8 +35,8 @@ const Drawer = createDrawerNavigator();
 
 export default function App() {
   const refZone = useRef(null);
-  const [loading, setIsLoading] = useState(true);
-  const [savedZone, setSavedZone] = useState(null);
+  const [showZonePicker, setShowZonePicker] = useState(true);
+  const [showTimeData, setShowTimeData] = useState(false);
   const getData = async () => {
     try {
       await AsyncStorage.getItem('yourZone').then((res) => {
@@ -53,7 +54,7 @@ export default function App() {
       console.log(e);
     }
   };
-  const IntroScreen = ({ children }) => {
+  const IntroScreen = () => {
     return (
       <Box alignItems='center'>
         <Box
@@ -124,7 +125,7 @@ export default function App() {
             <Text fontWeight='400'>
               Waktu Solat bagi semua daerah di Malaysia
             </Text>
-            {children}
+            <TimeZone />
           </Stack>
         </Box>
       </Box>
@@ -315,9 +316,8 @@ export default function App() {
           onPress={() => {
             storeData(refZone.current)
               .then(() => {
-                navigation.navigate('Waktu Solat', {
-                  theZone: refZone.current,
-                });
+                setShowZonePicker(false);
+                setShowTimeData(true);
               })
               .catch((error) => {
                 console.log(error);
@@ -333,9 +333,8 @@ export default function App() {
     return (
       <>
         <Box>
-          <IntroScreen>
-            <TimeZone navigation={navigation} />
-          </IntroScreen>
+          {showZonePicker && <IntroScreen />}
+          {!showZonePicker && <Prayertimes zone={refZone.current} />}
         </Box>
       </>
     );
@@ -345,22 +344,38 @@ export default function App() {
       'linear-gradient': LinearGradient,
     },
   };
-  useEffect(() => {
-    const restoreState = async () => {
-      await getData().then((data) => {
-        if (data !== null) {
-          refZone.current = data;
-        }
-      });
-    };
-    restoreState();
-  }, []);
+  // useEffect(() => {
+  //   const restoreState = async () => {
+  //     const temp = await getData().then(() => {
+  //       if (temp !== null) {
+  //         refZone.current = temp;
+  //       }
+  //     });
+  //   };
+  //   restoreState();
+  // }, []);
   return (
     <NavigationContainer>
       <NativeBaseProvider config={config}>
-        <Drawer.Navigator initialRouteName='NNWS'>
-          <Drawer.Screen name='NNWS' component={MainApp} />
-          <Drawer.Screen name='Waktu Solat' component={Prayertimes} />
+        <Drawer.Navigator initialRouteName='Waktu Solat'>
+          <Drawer.Screen
+            name='Waktu Solat'
+            component={MainApp}
+            options={{
+              title: 'Waktu Solat',
+              headerRight: () => (
+                <Ionicons
+                  name='md-checkmark-circle'
+                  size={32}
+                  color='green'
+                  onPress={() => {
+                    setShowZonePicker(true);
+                    setShowTimeData(false);
+                  }}
+                />
+              ),
+            }}
+          />
           <Drawer.Screen name='Settings' component={Settings} />
           <Drawer.Screen name='About' component={About} />
         </Drawer.Navigator>
