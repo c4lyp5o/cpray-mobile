@@ -29,6 +29,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import About from './pages/About';
 import Settings from './pages/Settings';
 import Prayertimes from './pages/Prayertimes';
+import DrawerContent from './components/Drawercontent';
 import 'react-native-gesture-handler';
 
 const Drawer = createDrawerNavigator();
@@ -357,7 +358,10 @@ export default function App() {
   return (
     <NavigationContainer>
       <NativeBaseProvider config={config}>
-        <Drawer.Navigator initialRouteName='Waktu Solat'>
+        <Drawer.Navigator
+          initialRouteName='Waktu Solat'
+          drawerContent={(props) => <DrawerContent {...props} />}
+        >
           <Drawer.Screen
             name='Waktu Solat'
             component={MainApp}

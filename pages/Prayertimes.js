@@ -10,6 +10,8 @@ import {
   Heading,
 } from 'native-base';
 import { Audio } from 'expo-av';
+import * as TaskManager from 'expo-task-manager';
+import * as BackgroundFetch from 'expo-background-fetch';
 import { getProfile } from '../lib/Profile';
 import {
   timeReminder,
@@ -18,6 +20,7 @@ import {
   intepretDay,
 } from '../lib/Helper';
 
+TaskManager.defineTask('background-azan')
 const Timesdata = ({ data, zone }) => {
   const [timeNow, setTimeNow] = useState(new Date());
   const [timeReminderData, setTimeReminderData] = useState(null);
@@ -33,18 +36,7 @@ const Timesdata = ({ data, zone }) => {
     console.log('Playing Sound');
     await sound.playAsync();
   };
-  const firstInit = async (data) => {
-    // try {
-    //   const forToday = await timeReminder(data);
-    //   setTimeReminderData(forToday);
-    //   setLoading(false);
-    //   setInterval(() => {
-    //     playSound();
-    //     setIsPlaying(false);
-    //   }, timeReminderData.nextSolah.milliseconds);
-    // } catch (error) {
-    //   console.log(error);
-    // }
+  const firstInit = async (data) => {    
     timeReminder(data)
       .then((timeReminderData) => {
         setTimeReminderData(timeReminderData);
@@ -54,23 +46,24 @@ const Timesdata = ({ data, zone }) => {
         //   setIsPlaying(false);
         // }, timeReminderData.nextSolah.milliseconds);
         console.log(timeReminderData);
+        return timeReminderData;
       })
       .catch((error) => {
         console.log(error);
       });
   };
-  const intervalCheck = async (data) => {
-    try {
-      setTimeNow(new Date());
-      const forThisMoment = await timeReminder(data);
-      setTimeReminderData(forThisMoment);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const theTimer = setInterval(() => {
-    intervalCheck(data);
-  }, 30000);
+  // const intervalCheck = async (data) => {
+  //   try {
+  //     setTimeNow(new Date());
+  //     const forThisMoment = await timeReminder(data);
+  //     setTimeReminderData(forThisMoment);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+  // const theTimer = setInterval(() => {
+  //   intervalCheck(data);
+  // }, 30000);
   const stopCounter = () => {
     clearInterval(theTimer);
   };
@@ -79,6 +72,39 @@ const Timesdata = ({ data, zone }) => {
     if (reminder.nextSolah.minutes === 0 && isPlaying === false) {
       playSound();
       setIsPlaying(true);
+    }
+  };
+  const myTask = () => {
+    try {
+      // fetch data here...
+      playSound();
+      const backendData = 'Simulated fetch ' + Math.random();
+      console.log('myTask() ', backendData);
+      return backendData
+        ? BackgroundFetch.Result.NewData
+        : BackgroundFetch.Result.NoData;
+    } catch (err) {
+      return BackgroundFetch.Result.Failed;
+    }
+  };
+  const initBackgroundFetch = async (taskName, taskFn, interval) => {
+    try {
+      if (!TaskManager.isTaskDefined(taskName)) {
+        TaskManager.defineTask(taskName, taskFn);
+      }
+      const options = {
+        minimumInterval: interval, // in seconds
+      };
+      await BackgroundFetch.registerTaskAsync(taskName, options);
+    } catch (err) {
+      console.log('registerTaskAsync() failed:', err);
+    }
+  };
+  const removeBackgroundFetch = async (taskName) => {
+    try {
+      await BackgroundFetch.unregisterTaskAsync(taskName);
+    } catch (err) {
+      console.log('unregisterTaskAsync() failed:', err);
     }
   };
   useEffect(() => {
@@ -92,6 +118,7 @@ const Timesdata = ({ data, zone }) => {
     //   console.log(timeReminderData);
     // });
     firstInit(data);
+    initBackgroundFetch('background-azan', myTask, 30000);
     // prevInt = setInterval(() => {
     //   console.log('running new interval:' + prevInt);
     //   setTimeNow(new Date());
