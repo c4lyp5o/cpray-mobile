@@ -1,5 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { storeSettingsData, removeValue } from '../lib/Helper';
 import {
   Box,
   Switch,
@@ -23,7 +21,7 @@ import {
   WarningOutlineIcon,
 } from 'native-base';
 
-export default function Settings() {
+export default function Devpage() {
   return (
     <Box alignItems='center'>
       <Box
@@ -55,7 +53,7 @@ export default function Settings() {
                   color: 'gray.400',
                 }}
               >
-                Reset timezone
+                Dev Page
               </Text>
               <Button
                 size='sm'

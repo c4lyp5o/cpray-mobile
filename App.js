@@ -6,6 +6,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import Home from './pages/Home';
 import About from './pages/About';
 import Settings from './pages/Settings';
+import Devpage from './pages/Dev';
+import BackgroundFetchScreen from './pages/Fetch';
 import DrawerContent from './components/Drawercontent';
 import 'react-native-gesture-handler';
 
@@ -28,6 +30,8 @@ export default function App() {
           <Drawer.Screen name='Waktu Solat' component={Home} />
           <Drawer.Screen name='Settings' component={Settings} />
           <Drawer.Screen name='About' component={About} />
+          <Drawer.Screen name='Dev Page' component={Devpage} />
+          <Drawer.Screen name='Test Fetch' component={BackgroundFetchScreen} />
         </Drawer.Navigator>
       </NativeBaseProvider>
     </NavigationContainer>

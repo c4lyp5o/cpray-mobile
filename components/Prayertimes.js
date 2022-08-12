@@ -203,8 +203,8 @@ export default function Prayertimes({
                     ml='-0.5'
                     mt='-1'
                   >
-                    Solat seterusnya dalam {times.nextSolat.hours} jam,{' '}
-                    {times.nextSolat.minutes} minit
+                    {/* Solat seterusnya dalam {times.nextSolat.hours} jam,{' '}
+                    {times.nextSolat.minutes} minit */}
                   </Text>
                 </Stack>
               </Box>
