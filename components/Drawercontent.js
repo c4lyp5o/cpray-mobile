@@ -7,23 +7,40 @@ import {
   Text,
   Linking,
 } from 'react-native';
-
 import {
   DrawerContentScrollView,
   DrawerItemList,
   DrawerItem,
 } from '@react-navigation/drawer';
+import { Center } from 'native-base';
 
-const DrawerContent = (props) => {
+export default function DrawerContent(props) {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       {/*Top Large Image */}
-      <Image
-        source={{
-          uri: 'https://images.cdn4.stockunlimited.net/preview1300/moon-and-stars_1284710.jpg',
+      <Center
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: '20%',
         }}
-        style={styles.sideMenuProfileIcon}
-      />
+      >
+        <Image
+          source={{
+            uri: 'https://images.cdn4.stockunlimited.net/preview1300/moon-and-stars_1284710.jpg',
+          }}
+          style={styles.sideMenuProfileIcon}
+        />
+      </Center>
+      <Center
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 10,
+        }}
+      >
+        <Text>NNWS</Text>
+      </Center>
       <DrawerContentScrollView {...props}>
         <DrawerItemList {...props} />
         {/* <DrawerItem
@@ -46,7 +63,7 @@ const DrawerContent = (props) => {
       </DrawerContentScrollView>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   sideMenuProfileIcon: {
@@ -67,5 +84,3 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-
-export default DrawerContent;

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   Box,
   Center,
@@ -13,18 +14,17 @@ import { Audio } from 'expo-av';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
 import { getProfile } from '../lib/Profile';
-import {
-  timeReminder,
-  intepretHijriDate,
-  intepretChristDate,
-  intepretDay,
-} from '../lib/Helper';
+import { getZoneData } from '../lib/Helper';
 
-TaskManager.defineTask('background-azan')
-const Timesdata = ({ data, zone }) => {
-  const [timeNow, setTimeNow] = useState(new Date());
-  const [timeReminderData, setTimeReminderData] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function Prayertimes({
+  refZone,
+  zoneData,
+  setLoading,
+  setShowZonePicker,
+}) {
+  const [times, setTimes] = useState([]);
+  const [timesError, setTimesError] = useState(null);
+  const [timesLoading, setTimesLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sound, setSound] = useState(); // sound is a promise
   const playSound = async () => {
@@ -36,105 +36,53 @@ const Timesdata = ({ data, zone }) => {
     console.log('Playing Sound');
     await sound.playAsync();
   };
-  const firstInit = async (data) => {    
-    timeReminder(data)
-      .then((timeReminderData) => {
-        setTimeReminderData(timeReminderData);
-        setLoading(false);
-        // setInterval(() => {
-        //   playSound();
-        //   setIsPlaying(false);
-        // }, timeReminderData.nextSolah.milliseconds);
-        console.log(timeReminderData);
-        return timeReminderData;
-      })
-      .catch((error) => {
-        console.log(error);
+
+  useFocusEffect(
+    useCallback(() => {
+      getZoneData().then((res) => {
+        // console.log('in focus effect', res);
+        if (!res) {
+          setTimesLoading(true);
+          setLoading(true);
+          setShowZonePicker(true);
+          setTimeout(() => {
+            setLoading(false);
+          }, 200);
+        }
       });
-  };
-  // const intervalCheck = async (data) => {
-  //   try {
-  //     setTimeNow(new Date());
-  //     const forThisMoment = await timeReminder(data);
-  //     setTimeReminderData(forThisMoment);
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-  // const theTimer = setInterval(() => {
-  //   intervalCheck(data);
-  // }, 30000);
-  const stopCounter = () => {
-    clearInterval(theTimer);
-  };
-  const fuselage = (reminder) => {
-    console.log(reminder);
-    if (reminder.nextSolah.minutes === 0 && isPlaying === false) {
-      playSound();
-      setIsPlaying(true);
-    }
-  };
-  const myTask = () => {
-    try {
-      // fetch data here...
-      playSound();
-      const backendData = 'Simulated fetch ' + Math.random();
-      console.log('myTask() ', backendData);
-      return backendData
-        ? BackgroundFetch.Result.NewData
-        : BackgroundFetch.Result.NoData;
-    } catch (err) {
-      return BackgroundFetch.Result.Failed;
-    }
-  };
-  const initBackgroundFetch = async (taskName, taskFn, interval) => {
-    try {
-      if (!TaskManager.isTaskDefined(taskName)) {
-        TaskManager.defineTask(taskName, taskFn);
-      }
-      const options = {
-        minimumInterval: interval, // in seconds
+      return () => {
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+        console.log("nobody's looking at me");
       };
-      await BackgroundFetch.registerTaskAsync(taskName, options);
-    } catch (err) {
-      console.log('registerTaskAsync() failed:', err);
-    }
-  };
-  const removeBackgroundFetch = async (taskName) => {
-    try {
-      await BackgroundFetch.unregisterTaskAsync(taskName);
-    } catch (err) {
-      console.log('unregisterTaskAsync() failed:', err);
-    }
-  };
+    }, [])
+  );
+
   useEffect(() => {
-    // timeReminder(data).then((timeReminderData) => {
-    //   setTimeReminderData(timeReminderData);
-    //   setLoading(false);
-    //   setInterval(() => {
-    //     playSound();
-    //     setIsPlaying(false);
-    //   }, timeReminderData.nextSolah.milliseconds);
-    //   console.log(timeReminderData);
-    // });
-    firstInit(data);
-    initBackgroundFetch('background-azan', myTask, 30000);
-    // prevInt = setInterval(() => {
-    //   console.log('running new interval:' + prevInt);
-    //   setTimeNow(new Date());
-    //   timeReminder(data)
-    //     .then((timeReminderData) => {
-    //       setTimeReminderData(timeReminderData);
-    //       console.log(timeReminderData, prevInt);
-    //     })
-    //     .catch((error) => {
-    //       console.log(error);
-    //     });
-    // }, 30000);
-  }, [zone]);
-  if (loading) {
+    // console.log(zoneData, refZone);
+    const fetchTimes = async () => {
+      fetch(`https://api.waktusolat.me/waktusolat/today/${zoneData}`)
+        .then((response) => response.json())
+        .then((json) => {
+          setTimes(json);
+          setTimesLoading(false);
+        })
+        .catch((error) => {
+          setTimesError(error);
+          setTimesLoading(false);
+        });
+    };
+    fetchTimes();
+  }, []);
+
+  if (timesLoading) {
     return <Text>Loading...</Text>;
   }
+
+  if (timesError) {
+    return <Text>Error: {error.message}</Text>;
+  }
+
   return (
     <>
       <Box alignItems='center'>
@@ -160,7 +108,7 @@ const Timesdata = ({ data, zone }) => {
             <AspectRatio w='100%' maxH='full' ratio={16 / 9}>
               <Image
                 source={{
-                  uri: getProfile(zone).picture,
+                  uri: getProfile(zoneData).picture,
                 }}
                 alt='image'
               />
@@ -186,7 +134,7 @@ const Timesdata = ({ data, zone }) => {
           <Stack p='4' space={3}>
             <Stack space={2}>
               <Heading size='md' ml='-1'>
-                {data.zone}
+                {times.zone}
               </Heading>
               <Text
                 fontSize='md'
@@ -200,7 +148,7 @@ const Timesdata = ({ data, zone }) => {
                 ml='-0.5'
                 mt='-1'
               >
-                {getProfile(zone).negeri}
+                {times.negeri}
               </Text>
               <Text
                 fontSize='md'
@@ -214,9 +162,7 @@ const Timesdata = ({ data, zone }) => {
                 ml='-0.5'
                 mt='-1'
               >
-                {intepretDay(data.data[0].day)},{' '}
-                {intepretHijriDate(data.data[0].hijri)} /{' '}
-                {intepretChristDate(data.data[0].date)}
+                {times.today.day}, {times.today.hijri} / {times.today.date}
               </Text>
             </Stack>
             <Box alignItems='center'>
@@ -241,7 +187,7 @@ const Timesdata = ({ data, zone }) => {
                 <Stack p='4' space={3}>
                   <Stack space={2}>
                     <Heading size='2xl' ml='-1' textAlign='center'>
-                      {timeNow.toLocaleTimeString('en-GB').slice(0, 5)}
+                      {times.today.time}
                     </Heading>
                   </Stack>
                   <Text
@@ -257,8 +203,8 @@ const Timesdata = ({ data, zone }) => {
                     ml='-0.5'
                     mt='-1'
                   >
-                    Solat seterusnya dalam {timeReminderData.nextSolah.hours}{' '}
-                    jam, {timeReminderData.nextSolah.minutes} minit
+                    Solat seterusnya dalam {times.nextSolat.hours} jam,{' '}
+                    {times.nextSolat.minutes} minit
                   </Text>
                 </Stack>
               </Box>
@@ -289,7 +235,7 @@ const Timesdata = ({ data, zone }) => {
                         Subuh
                       </Heading>
                     </Stack>
-                    <Text fontWeight='400'>{data.data[0].fajr}</Text>
+                    <Text fontWeight='400'>{times.data[0].fajr}</Text>
                   </Stack>
                 </Box>
               </Box>
@@ -318,7 +264,7 @@ const Timesdata = ({ data, zone }) => {
                         Syuruk
                       </Heading>
                     </Stack>
-                    <Text fontWeight='400'>{data.data[0].syuruk}</Text>
+                    <Text fontWeight='400'>{times.data[0].syuruk}</Text>
                   </Stack>
                 </Box>
               </Box>
@@ -347,7 +293,7 @@ const Timesdata = ({ data, zone }) => {
                         Zuhur
                       </Heading>
                     </Stack>
-                    <Text fontWeight='400'>{data.data[0].dhuhr}</Text>
+                    <Text fontWeight='400'>{times.data[0].dhuhr}</Text>
                   </Stack>
                 </Box>
               </Box>
@@ -378,7 +324,7 @@ const Timesdata = ({ data, zone }) => {
                         Asar
                       </Heading>
                     </Stack>
-                    <Text fontWeight='400'>{data.data[0].asr}</Text>
+                    <Text fontWeight='400'>{times.data[0].asr}</Text>
                   </Stack>
                 </Box>
               </Box>
@@ -407,7 +353,7 @@ const Timesdata = ({ data, zone }) => {
                         Maghrib
                       </Heading>
                     </Stack>
-                    <Text fontWeight='400'>{data.data[0].maghrib}</Text>
+                    <Text fontWeight='400'>{times.data[0].maghrib}</Text>
                   </Stack>
                 </Box>
               </Box>
@@ -436,7 +382,7 @@ const Timesdata = ({ data, zone }) => {
                         Isha'
                       </Heading>
                     </Stack>
-                    <Text fontWeight='400'>{data.data[0].isha}</Text>
+                    <Text fontWeight='400'>{times.data[0].isha}</Text>
                   </Stack>
                 </Box>
               </Box>
@@ -446,32 +392,4 @@ const Timesdata = ({ data, zone }) => {
       </Box>
     </>
   );
-};
-
-export default function Prayertimes({ route, zone }) {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    const fetchData = () => {
-      fetch(`https://api.waktusolat.me/waktusolat/week/${zone}`)
-        .then((response) => response.json())
-        .then((json) => {
-          setData(json);
-          setLoading(false);
-        })
-        .catch((error) => {
-          setError(error);
-          setLoading(false);
-        });
-    };
-    fetchData();
-  }, []);
-  if (loading) {
-    return <Text>Loading...</Text>;
-  }
-  if (error) {
-    return <Text>Error: {error.message}</Text>;
-  }
-  return <Box>{data && <Timesdata data={data} zone={zone} />}</Box>;
 }
