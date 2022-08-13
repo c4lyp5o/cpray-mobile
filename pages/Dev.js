@@ -1,77 +1,115 @@
-import {
-  Box,
-  Switch,
-  Checkbox,
-  Button,
-  FlatList,
-  Center,
-  NativeBaseProvider,
-  Text,
-  Menu,
-  Pressable,
-  HamburgerIcon,
-  AspectRatio,
-  Image,
-  Stack,
-  Heading,
-  HStack,
-  Select,
-  FormControl,
-  CheckIcon,
-  WarningOutlineIcon,
-} from 'native-base';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import React, { useState, useEffect, useRef } from 'react';
+import { Text, View, Button, Platform } from 'react-native';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 export default function Devpage() {
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then((token) =>
+      setExpoPushToken(token)
+    );
+
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        setNotification(notification);
+      });
+
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log(response);
+      });
+
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
+      );
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
+
   return (
-    <Box alignItems='center'>
-      <Box
-        maxW='full'
-        rounded='lg'
-        overflow='hidden'
-        borderColor='coolGray.200'
-        borderWidth='1'
-        _dark={{
-          borderColor: 'coolGray.600',
-          backgroundColor: 'gray.700',
+    <View
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'space-around',
+      }}
+    >
+      <Text>Your expo push token: {expoPushToken}</Text>
+      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <Text>
+          Title: {notification && notification.request.content.title}{' '}
+        </Text>
+        <Text>Body: {notification && notification.request.content.body}</Text>
+        <Text>
+          Data:{' '}
+          {notification && JSON.stringify(notification.request.content.data)}
+        </Text>
+      </View>
+      <Button
+        title='Press to schedule a notification'
+        onPress={async () => {
+          await schedulePushNotification();
         }}
-        _web={{
-          shadow: 2,
-          borderWidth: 0,
-        }}
-        _light={{
-          backgroundColor: 'gray.50',
-        }}
-      >
-        <Stack p='4' space={3}>
-          <Stack space={2}>
-            <HStack space={6}>
-              <Text
-                fontWeight='bold'
-                fontSize='lg'
-                color='gray.800'
-                _dark={{
-                  color: 'gray.400',
-                }}
-              >
-                Dev Page
-              </Text>
-              <Button
-                size='sm'
-                variant='ghost'
-                color='gray.600'
-                _dark={{
-                  color: 'gray.400',
-                }}
-                onPress={() => {
-                  removeValue();
-                }}
-              >
-                Reset
-              </Button>
-            </HStack>
-          </Stack>
-        </Stack>
-      </Box>
-    </Box>
+      />
+    </View>
   );
+}
+
+async function schedulePushNotification() {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Masuk Waktu',
+      body: 'Hayya alassolah',
+      data: { data: 'supposed to ada sound lah' },
+    },
+    trigger: { channelId: 'azan-app', seconds: 10 },
+  });
+}
+
+async function registerForPushNotificationsAsync() {
+  let token;
+  if (Device.isDevice) {
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
+  } else {
+    alert('Must use physical device for Push Notifications');
+  }
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('azan-app', {
+      name: 'Azan App',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      sound: 'azan.wav',
+      lightColor: '#FF231F7C',
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: true,
+    });
+  }
+
+  return token;
 }
