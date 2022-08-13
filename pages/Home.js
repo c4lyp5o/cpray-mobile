@@ -3,8 +3,6 @@ import { View, Text } from 'native-base';
 import Intro from '../components/Intro';
 import Zonepicker from '../components/Zonepicker';
 import Prayertimes from '../components/Prayertimes';
-import NotificationService from '../components/Notifications';
-import FetchService from '../components/Fetch';
 import { getData } from '../lib/Helper';
 
 export default function Home() {
