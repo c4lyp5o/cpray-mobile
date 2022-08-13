@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Button, Platform } from 'react-native';
+import { View, Button, Platform, StyleSheet } from 'react-native';
+import LocationService from '../components/Location';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -53,6 +54,7 @@ export default function Devpage() {
         color='#841584'
         accessibilityLabel='Trigger Local Notifications'
       />
+      <LocationService />
     </View>
   );
 }
@@ -82,3 +84,21 @@ async function registerForPushNotificationsAsync() {
   }
   console.log('registered notification channel');
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  button: {
+    padding: 10,
+    marginVertical: 5,
+  },
+  textContainer: {
+    margin: 10,
+  },
+  boldText: {
+    fontWeight: 'bold',
+  },
+});

@@ -21,7 +21,6 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     `Got background fetch call at date: ${new Date(now).toISOString()}`
   );
   setStateFn(backendData);
-  await playSound();
 
   // Be sure to return the successful result type!
   return backendData

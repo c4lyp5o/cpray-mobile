@@ -25,17 +25,6 @@ export default function Prayertimes({
   const [times, setTimes] = useState([]);
   const [timesError, setTimesError] = useState(null);
   const [timesLoading, setTimesLoading] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [sound, setSound] = useState(); // sound is a promise
-  const playSound = async () => {
-    console.log('Loading Sound');
-    const { sound } = await Audio.Sound.createAsync(
-      require('../assets/azan.mp3')
-    );
-    setSound(sound);
-    console.log('Playing Sound');
-    await sound.playAsync();
-  };
 
   useFocusEffect(
     useCallback(() => {
@@ -162,7 +151,9 @@ export default function Prayertimes({
                 ml='-0.5'
                 mt='-1'
               >
-                {times.today.day}, {times.today.hijri} / {times.today.date}
+                {times.today.day.split(' / ')[0]},{' '}
+                {times.today.hijri.split(' / ')[1]},{' '}
+                {times.today.date.split(' / ')[1]}
               </Text>
             </Stack>
             <Box alignItems='center'>
@@ -203,8 +194,8 @@ export default function Prayertimes({
                     ml='-0.5'
                     mt='-1'
                   >
-                    {/* Solat seterusnya dalam {times.nextSolat.hours} jam,{' '}
-                    {times.nextSolat.minutes} minit */}
+                    Solat seterusnya dalam {times.nextSolat.hours} jam,{' '}
+                    {times.nextSolat.minutes} minit
                   </Text>
                 </Stack>
               </Box>
