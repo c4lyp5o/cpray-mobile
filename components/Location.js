@@ -37,9 +37,8 @@ export default function LocationService() {
   }
 
   return (
-    <View style={styles.textContainer}>
+    <View>
       <Button
-        style={styles.textContainer}
         onPress={getLocation}
         title='Get Location'
         color='#841584'
@@ -59,11 +58,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    padding: 10,
+    padding: 1,
     marginVertical: 5,
   },
   textContainer: {
-    margin: 10,
+    margin: 5,
   },
   boldText: {
     fontWeight: 'bold',

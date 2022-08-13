@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Button } from 'react-native';
-import { Audio } from 'expo-av';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
 
@@ -49,7 +48,7 @@ let setStateFn = () => {
   console.log('State not yet initialized');
 };
 
-export default function BackgroundFetchScreen() {
+export default function FetchService() {
   const [isRegistered, setIsRegistered] = React.useState(false);
   const [status, setStatus] = React.useState(null);
   const [state, setState] = useState(null);
@@ -81,26 +80,23 @@ export default function BackgroundFetchScreen() {
   };
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.textContainer}>
-        <Text>
-          Background fetch status:{' '}
-          <Text style={styles.boldText}>
-            {status && BackgroundFetch.BackgroundFetchStatus[status]}
-          </Text>
+    <View>
+      <Text>
+        Background fetch status:{' '}
+        <Text style={styles.boldText}>
+          {status && BackgroundFetch.BackgroundFetchStatus[status]}
         </Text>
-        <Text>
-          Background fetch task name:{' '}
-          <Text style={styles.boldText}>
-            {isRegistered ? BACKGROUND_FETCH_TASK : 'Not registered yet!'}
-          </Text>
+      </Text>
+      <Text>
+        Background fetch task name:{' '}
+        <Text style={styles.boldText}>
+          {isRegistered ? BACKGROUND_FETCH_TASK : 'Not registered yet!'}
         </Text>
-        <Text>
-          Background fetch data:{' '}
-          {/* <Text style={styles.boldText}>{state ? state : 'No data yet!'}</Text> */}
-        </Text>
-      </View>
-      <View style={styles.textContainer}></View>
+      </Text>
+      <Text>
+        Background fetch data:{' '}
+        {/* <Text style={styles.boldText}>{state ? state : 'No data yet!'}</Text> */}
+      </Text>
       <Button
         title={
           isRegistered
@@ -120,11 +116,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    padding: 10,
-    marginVertical: 5,
+    padding: 1,
+    marginVertical: 1,
   },
   textContainer: {
-    margin: 10,
+    margin: 1,
   },
   boldText: {
     fontWeight: 'bold',

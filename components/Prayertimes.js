@@ -10,14 +10,10 @@ import {
   Stack,
   Heading,
 } from 'native-base';
-import { Audio } from 'expo-av';
-import * as TaskManager from 'expo-task-manager';
-import * as BackgroundFetch from 'expo-background-fetch';
 import { getProfile } from '../lib/Profile';
-import { getZoneData } from '../lib/Helper';
+import { getData, storeData } from '../lib/Helper';
 
 export default function Prayertimes({
-  refZone,
   zoneData,
   setLoading,
   setShowZonePicker,
@@ -28,8 +24,8 @@ export default function Prayertimes({
 
   useFocusEffect(
     useCallback(() => {
-      getZoneData().then((res) => {
-        // console.log('in focus effect', res);
+      getData('yourZone').then((res) => {
+        console.log('Prayertimes focuseffect checking if zone if valid', res);
         if (!res) {
           setTimesLoading(true);
           setLoading(true);
@@ -38,21 +34,24 @@ export default function Prayertimes({
             setLoading(false);
           }, 200);
         }
+        return true;
       });
       return () => {
         // Do something when the screen is unfocused
         // Useful for cleanup functions
-        console.log("nobody's looking at me");
+        console.log('Prayertimes NOT IN FOCUS');
       };
     }, [])
   );
 
   useEffect(() => {
-    // console.log(zoneData, refZone);
+    console.log('Prayertimes MOUNTED');
     const fetchTimes = async () => {
+      console.log('Fetching data in Prayertimes');
       fetch(`https://api.waktusolat.me/waktusolat/today/${zoneData}`)
         .then((response) => response.json())
         .then((json) => {
+          storeData('yourTimes', json);
           setTimes(json);
           setTimesLoading(false);
         })
@@ -61,7 +60,24 @@ export default function Prayertimes({
           setTimesLoading(false);
         });
     };
-    fetchTimes();
+    const cacheService = async () => {
+      console.log(
+        '-------------Validating zone in Prayertimes-----------------'
+      );
+      const timesData = await getData('yourTimes');
+      if (timesData) {
+        console.log('Using stored times data');
+        setTimes(timesData);
+        setTimesLoading(false);
+      } else {
+        console.log('No times data');
+        fetchTimes();
+      }
+    };
+    cacheService();
+    return () => {
+      console.log('Prayertimes UNMOUNTED');
+    };
   }, []);
 
   if (timesLoading) {

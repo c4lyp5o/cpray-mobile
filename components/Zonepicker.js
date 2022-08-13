@@ -1,6 +1,5 @@
 import { Box, Center, Select, Button, CheckCircleIcon } from 'native-base';
-import { set } from 'react-native-reanimated';
-import { storeZoneData } from '../lib/Helper';
+import { storeData } from '../lib/Helper';
 
 export default function Zonepicker({
   refZone,
@@ -182,7 +181,7 @@ export default function Zonepicker({
         marginTop={4}
         backgroundColor='violet.500'
         onPress={() => {
-          storeZoneData(refZone.current)
+          storeData('yourZone', refZone.current)
             .then(() => {
               setZoneData(refZone.current);
               setTimeout(() => {

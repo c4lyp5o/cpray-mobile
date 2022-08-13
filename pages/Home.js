@@ -3,7 +3,9 @@ import { View, Text } from 'native-base';
 import Intro from '../components/Intro';
 import Zonepicker from '../components/Zonepicker';
 import Prayertimes from '../components/Prayertimes';
-import { getZoneData } from '../lib/Helper';
+import NotificationService from '../components/Notifications';
+import FetchService from '../components/Fetch';
+import { getData } from '../lib/Helper';
 
 export default function Home() {
   const refZone = useRef(null);
@@ -11,19 +13,23 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [zoneData, setZoneData] = useState(null);
   useEffect(() => {
-    getZoneData().then((res) => {
-      console.log('in useeffect', res);
-      if (!res) {
+    const getZoneData = async () => {
+      console.log('-------------this is the start of the app--------------');
+      const zone = await getData('yourZone');
+      if (zone) {
+        console.log('zone:', zone);
+        setZoneData(zone);
+        setTimeout(() => {
+          setLoading(false);
+          setShowZonePicker(false);
+        }, 300);
+      } else {
+        console.log('No zone data');
         setLoading(false);
         setShowZonePicker(true);
-        return;
       }
-      setZoneData(res);
-      setTimeout(() => {
-        setLoading(false);
-        setShowZonePicker(false);
-      }, 1000);
-    });
+    };
+    getZoneData();
   }, []);
   if (loading) {
     return (
@@ -39,24 +45,26 @@ export default function Home() {
     );
   }
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      {showZonePicker && (
-        <Intro>
-          <Zonepicker
+    <>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        {showZonePicker && (
+          <Intro>
+            <Zonepicker
+              refZone={refZone}
+              setShowZonePicker={setShowZonePicker}
+              setZoneData={setZoneData}
+            />
+          </Intro>
+        )}
+        {!showZonePicker && (
+          <Prayertimes
             refZone={refZone}
+            zoneData={zoneData}
+            setLoading={setLoading}
             setShowZonePicker={setShowZonePicker}
-            setZoneData={setZoneData}
           />
-        </Intro>
-      )}
-      {!showZonePicker && (
-        <Prayertimes
-          refZone={refZone}
-          zoneData={zoneData}
-          setLoading={setLoading}
-          setShowZonePicker={setShowZonePicker}
-        />
-      )}
-    </View>
+        )}
+      </View>
+    </>
   );
 }
