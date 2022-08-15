@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text } from 'native-base';
+import { Text, Box } from 'native-base';
 import Intro from '../components/Intro';
 import Zonepicker from '../components/Zonepicker';
 import Prayertimes from '../components/Prayertimes';
@@ -31,7 +31,7 @@ export default function Home() {
   }, []);
   if (loading) {
     return (
-      <View
+      <Box
         style={{
           flex: 1,
           justifyContent: 'center',
@@ -39,30 +39,28 @@ export default function Home() {
         }}
       >
         <Text>Loading...</Text>
-      </View>
+      </Box>
     );
   }
   return (
-    <>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        {showZonePicker && (
-          <Intro>
-            <Zonepicker
-              refZone={refZone}
-              setShowZonePicker={setShowZonePicker}
-              setZoneData={setZoneData}
-            />
-          </Intro>
-        )}
-        {!showZonePicker && (
-          <Prayertimes
+    <Box safeArea>
+      {showZonePicker && (
+        <Intro>
+          <Zonepicker
             refZone={refZone}
-            zoneData={zoneData}
-            setLoading={setLoading}
             setShowZonePicker={setShowZonePicker}
+            setZoneData={setZoneData}
           />
-        )}
-      </View>
-    </>
+        </Intro>
+      )}
+      {!showZonePicker && (
+        <Prayertimes
+          refZone={refZone}
+          zoneData={zoneData}
+          setLoading={setLoading}
+          setShowZonePicker={setShowZonePicker}
+        />
+      )}
+    </Box>
   );
 }

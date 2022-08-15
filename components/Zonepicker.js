@@ -1,4 +1,4 @@
-import { Box, Center, Select, Button, CheckCircleIcon } from 'native-base';
+import { Box, Select, Button, CheckCircleIcon } from 'native-base';
 import { storeData } from '../lib/Helper';
 
 export default function Zonepicker({
@@ -7,7 +7,7 @@ export default function Zonepicker({
   setZoneData,
 }) {
   return (
-    <Center marginTop={2}>
+    <Box>
       <Box w='full'>
         <Select
           onValueChange={(value) => (refZone.current = value)}
@@ -195,6 +195,6 @@ export default function Zonepicker({
       >
         Set Timezone
       </Button>
-    </Center>
+    </Box>
   );
 }

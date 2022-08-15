@@ -6,38 +6,28 @@ import * as TaskManager from 'expo-task-manager';
 
 const BACKGROUND_FETCH_TASK = 'background-azan-setter';
 
-// TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
-//   const now = Date.now();
+TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+  const now = Date.now();
 
-//   const backendData = await fetch(
-//     'https://api.waktusolat.me/waktusolat/today/kdh01'
-//   ).then((res) => res.json());
-//   console.log('myTask() ', backendData);
+  const backendData = await fetch(
+    'https://api.waktusolat.me/waktusolat/today/kdh01'
+  ).then((res) => res.json());
+  console.log('myTask() ', backendData);
 
-//   console.log(
-//     `Got background fetch call at date: ${new Date(now).toISOString()}`
-//   );
-//   setStateFn(backendData);
+  console.log(
+    `Got background fetch call at date: ${new Date(now).toISOString()}`
+  );
+  setStateFn(backendData);
 
-//   // Be sure to return the successful result type!
-//   return backendData
-//     ? BackgroundFetch.BackgroundFetchResult.NewData
-//     : BackgroundFetch.BackgroundFetchResult.NoData;
-// });
+  // Be sure to return the successful result type!
+  return backendData
+    ? BackgroundFetch.BackgroundFetchResult.NewData
+    : BackgroundFetch.BackgroundFetchResult.NoData;
+});
 
 let setStateFn = () => {
   console.log('State not yet initialized');
 };
-
-async function checkNotificationStatus() {
-  const scheduledOnes = await Notifications.getAllScheduledNotificationsAsync();
-  if (scheduledOnes.length > 0) {
-    console.log('scheduled notifications', scheduledOnes);
-    return scheduledOnes;
-  } else {
-    console.log('no scheduled notifications');
-  }
-}
 
 export default function FetchService() {
   const [isRegistered, setIsRegistered] = useState(false);
@@ -79,7 +69,7 @@ export default function FetchService() {
 
   async function registerBackgroundFetchAsync() {
     return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-      minimumInterval: 1, // 4 hours
+      minimumInterval: 60 * 4, // 4 hours
       stopOnTerminate: false, // android only,
       startOnBoot: true, // android only
     });

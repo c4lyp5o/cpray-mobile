@@ -23,8 +23,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "permissions": ["NOTIFICATIONS"],
-      "useNextNotificationsApi": true,
       "package": "com.calypso666.cpraymobile"
     },
     "web": {

@@ -22,7 +22,7 @@ export default function DrawerContent(props) {
         style={{
           alignItems: 'center',
           justifyContent: 'center',
-          marginTop: '20%',
+          marginTop: '10%',
         }}
       >
         <Image

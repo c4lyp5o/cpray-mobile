@@ -4,7 +4,7 @@ import { Linking } from 'react-native';
 
 export default function About() {
   return (
-    <Box alignItems='center'>
+    <Box safeArea>
       <Box
         maxW='full'
         rounded='lg'
