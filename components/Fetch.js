@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { useState, useEffect, useCallback, createContext } from 'react';
+// import { StyleSheet, Text, View, Button } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
+
+const FetchContext = createContext();
 
 const BACKGROUND_FETCH_TASK = 'background-azan-setter';
 
@@ -25,36 +27,57 @@ const BACKGROUND_FETCH_TASK = 'background-azan-setter';
 //     : BackgroundFetch.BackgroundFetchResult.NoData;
 // });
 
+TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+  console.log('running task');
+  // const BTzoneData = await getData('yourZone');
+  // await fetchTimes(BTzoneData);
+  // const BTtempDataA = await getData('yourTimes');
+  // const BTtempDataB = await getTimeDifference(BTtempDataA);
+  // const BTnotifTempData = await checkNotificationStatus();
+  // if (BTnotifTempData < 1) {
+  //   if (BTtempDataB > 9) {
+  //     try {
+  //       let timers = [];
+  //       Object.entries(BTtempDataB.solatETA).map((item) => {
+  //         timers = [...timers, item[0], Math.round(item[1] / 1000)];
+  //       });
+  //       for (let i = 0; i < timers.length; i += 2) {
+  //         await schedulePushNotification(timers[i], timers[i + 1]);
+  //       }
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   }
+  //   console.log('notif is < 1 but BTtempDataB is < 9');
+  // } else {
+  //   console.log('notif is > 0');
+  // }
+
+  return BTtempDataB
+    ? BackgroundFetch.BackgroundFetchResult.NewData
+    : BackgroundFetch.BackgroundFetchResult.NoData;
+});
+
 let setStateFn = () => {
   console.log('State not yet initialized');
 };
 
-async function checkNotificationStatus() {
-  const scheduledOnes = await Notifications.getAllScheduledNotificationsAsync();
-  if (scheduledOnes.length > 0) {
-    console.log('scheduled notifications', scheduledOnes);
-    return scheduledOnes;
-  } else {
-    console.log('no scheduled notifications');
-  }
-}
-
-export default function FetchService() {
+function FetchService({ children }) {
   const [isRegistered, setIsRegistered] = useState(false);
   const [status, setStatus] = useState(null);
   const [state, setState] = useState(null);
   setStateFn = setState;
 
-  useFocusEffect(
-    useCallback(() => {
-      console.log('---------this is fetch service------------');
-      checkStatusAsync();
-    })
-  );
-
-  useEffect(() => {
-    checkStatusAsync();
-  }, []);
+  async function checkNotificationStatus() {
+    const scheduledOnes =
+      await Notifications.getAllScheduledNotificationsAsync();
+    if (scheduledOnes.length > 0) {
+      console.log('scheduled notifications', scheduledOnes);
+      return scheduledOnes;
+    } else {
+      console.log('no scheduled notifications');
+    }
+  }
 
   const checkStatusAsync = async () => {
     const status = await BackgroundFetch.getStatusAsync();
@@ -89,50 +112,66 @@ export default function FetchService() {
     return BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
   }
 
+  const fetchTimes = async (zone) => {
+    fetch(`https://api.waktusolat.me/waktusolat/today/${zone}`)
+      .then((response) => response.json())
+      .then((json) => {
+        storeData('yourTimes', json);
+      });
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('---------this is fetch service------------');
+      checkStatusAsync();
+    })
+  );
+
+  useEffect(() => {
+    checkStatusAsync();
+  }, []);
+
   return (
-    <View>
-      <Text>
-        Background fetch status:{' '}
-        <Text style={styles.boldText}>
-          {status && BackgroundFetch.BackgroundFetchStatus[status]}
-        </Text>
-      </Text>
-      <Text>
-        Background fetch task name:{' '}
-        <Text style={styles.boldText}>
-          {isRegistered ? BACKGROUND_FETCH_TASK : 'Not registered yet!'}
-        </Text>
-      </Text>
-      <Text>
-        Background fetch data:{' '}
-        {/* <Text style={styles.boldText}>{state ? state : 'No data yet!'}</Text> */}
-      </Text>
-      <Button
-        title={
-          isRegistered
-            ? 'Unregister BackgroundFetch task'
-            : 'Register BackgroundFetch task'
-        }
-        onPress={toggleFetchTask}
-      />
-    </View>
+    <FetchContext.Provider
+      value={{
+        BACKGROUND_FETCH_TASK,
+        BackgroundFetch,
+        TaskManager,
+        status,
+        setStatus,
+        isRegistered,
+        setIsRegistered,
+        state,
+        setState,
+        registerBackgroundFetchAsync,
+        unregisterBackgroundFetchAsync,
+        checkStatusAsync,
+        checkNotificationStatus,
+        toggleFetchTask,
+        fetchTimes,
+      }}
+    >
+      {children}
+    </FetchContext.Provider>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  button: {
-    padding: 1,
-    marginVertical: 1,
-  },
-  textContainer: {
-    margin: 1,
-  },
-  boldText: {
-    fontWeight: 'bold',
-  },
-});
+export { FetchService, FetchContext };
+
+// const styles = StyleSheet.create({
+//   screen: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   button: {
+//     padding: 1,
+//     marginVertical: 1,
+//   },
+//   textContainer: {
+//     margin: 1,
+//   },
+//   boldText: {
+//     fontWeight: 'bold',
+//   },
+// });

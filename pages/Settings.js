@@ -1,71 +1,20 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useContext,
+} from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
-import * as BackgroundFetch from 'expo-background-fetch';
-import * as TaskManager from 'expo-task-manager';
 import { Box, Button, Text, Stack, HStack, Radio } from 'native-base';
+import { FetchContext } from '../components/Fetch';
 import {
   getData,
   storeData,
   hardReset,
   getTimeDifference,
 } from '../lib/Helper';
-
-// ----------------------------BACKGROUND FETCH------------------------------------
-
-const BACKGROUND_FETCH_TASK = 'background-azan-setter';
-
-TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
-  console.log('running task');
-  const BTzoneData = await getData('yourZone');
-  await fetchTimes(BTzoneData);
-  const BTtempDataA = await getData('yourTimes');
-  const BTtempDataB = await getTimeDifference(BTtempDataA);
-  const BTnotifTempData = await checkNotificationStatus();
-  if (BTnotifTempData < 1) {
-    if (BTtempDataB > 9) {
-      try {
-        let timers = [];
-        Object.entries(BTtempDataB.solatETA).map((item) => {
-          timers = [...timers, item[0], Math.round(item[1] / 1000)];
-        });
-        for (let i = 0; i < timers.length; i += 2) {
-          await schedulePushNotification(timers[i], timers[i + 1]);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-    console.log('notif is < 1 but BTtempDataB is < 9');
-  } else {
-    console.log('notif is > 0');
-  }
-
-  return BTtempDataB
-    ? BackgroundFetch.BackgroundFetchResult.NewData
-    : BackgroundFetch.BackgroundFetchResult.NoData;
-});
-
-async function registerBackgroundFetchAsync() {
-  console.log('BACKGROUND TASK REGISTERED');
-  return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-    minimumInterval: 1, // this is 4 hours!
-    stopOnTerminate: false, // android only,
-    startOnBoot: true, // android only
-  });
-}
-
-async function unregisterBackgroundFetchAsync() {
-  return BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
-}
-
-const fetchTimes = async (zone) => {
-  fetch(`https://api.waktusolat.me/waktusolat/today/${zone}`)
-    .then((response) => response.json())
-    .then((json) => {
-      storeData('yourTimes', json);
-    });
-};
 
 // ----------------------------NOTIFICATIONS------------------------------------
 
@@ -124,6 +73,14 @@ function reRender() {
 }
 
 export default function Settings() {
+  const {
+    registerBackgroundFetchAsync,
+    unregisterBackgroundFetchAsync,
+    checkStatusAsync,
+    checkNotificationStatus,
+    toggleFetchTask,
+    fetchTimes,
+  } = useContext(FetchContext);
   const forceRerender = reRender();
   const notificationListener = useRef();
   const responseListener = useRef();

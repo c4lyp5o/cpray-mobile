@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Settings from './pages/Settings';
 import Devpage from './pages/Dev';
+import { FetchService } from './components/Fetch';
 import DrawerContent from './components/Drawercontent';
 import 'react-native-gesture-handler';
 
@@ -21,17 +22,19 @@ const config = {
 export default function App() {
   return (
     <NavigationContainer>
-      <NativeBaseProvider config={config}>
-        <Drawer.Navigator
-          initialRouteName='Waktu Solat'
-          drawerContent={(props) => <DrawerContent {...props} />}
-        >
-          <Drawer.Screen name='Waktu Solat' component={Home} />
-          <Drawer.Screen name='Settings' component={Settings} />
-          <Drawer.Screen name='About' component={About} />
-          <Drawer.Screen name='Dev Page' component={Devpage} />
-        </Drawer.Navigator>
-      </NativeBaseProvider>
+      <FetchService>
+        <NativeBaseProvider config={config}>
+          <Drawer.Navigator
+            initialRouteName='Waktu Solat'
+            drawerContent={(props) => <DrawerContent {...props} />}
+          >
+            <Drawer.Screen name='Waktu Solat' component={Home} />
+            <Drawer.Screen name='Settings' component={Settings} />
+            <Drawer.Screen name='About' component={About} />
+            <Drawer.Screen name='Dev Page' component={Devpage} />
+          </Drawer.Navigator>
+        </NativeBaseProvider>
+      </FetchService>
     </NavigationContainer>
   );
 }
