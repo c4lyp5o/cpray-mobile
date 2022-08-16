@@ -3,7 +3,20 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
-import { Box, Button, Text, Stack, HStack, Radio } from 'native-base';
+import { StatusBar } from 'expo-status-bar';
+import {
+  Box,
+  Button,
+  Text,
+  Stack,
+  HStack,
+  Radio,
+  Spinner,
+  useToast,
+} from 'native-base';
+import FetchService from '../components/Fetch';
+import NotificationService from '../components/Notifications';
+import LocationService from '../components/Location';
 import {
   getData,
   storeData,
@@ -24,6 +37,7 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   const BTnotifTempData = await checkNotificationStatus();
   if (BTnotifTempData < 1) {
     if (BTtempDataB > 9) {
+      console.log('BTtempDataB > 9');
       try {
         let timers = [];
         Object.entries(BTtempDataB.solatETA).map((item) => {
@@ -49,7 +63,7 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 async function registerBackgroundFetchAsync() {
   console.log('BACKGROUND TASK REGISTERED');
   return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-    minimumInterval: 1, // this is 4 hours!
+    minimumInterval: 60 * 4, // this is 4 hours!
     stopOnTerminate: false, // android only,
     startOnBoot: true, // android only
   });
@@ -114,19 +128,11 @@ async function checkNotificationStatus() {
   }
 }
 
-// RERENDER
-function reRender() {
-  const [rerender, setRerender] = useState(0);
-  return () => {
-    console.log('forcing rerender');
-    setRerender((render) => render + 1);
-  };
-}
-
 export default function Settings() {
-  const forceRerender = reRender();
+  const toast = useToast();
   const notificationListener = useRef();
   const responseListener = useRef();
+  const [tempZone, setTempZone] = useState(null);
   const [notification, setNotification] = useState(false);
   const [settings, setSettings] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -155,6 +161,9 @@ export default function Settings() {
   }
 
   async function turnOffNotifications() {
+    if (settings === 'off') {
+      return true;
+    }
     try {
       await storeData('yourSettings', 'off');
       await unregisterBackgroundFetchAsync();
@@ -168,30 +177,51 @@ export default function Settings() {
     }
   }
 
+  async function harderReset() {
+    setSettings('off');
+    setTempZone(null);
+    await hardReset();
+    await turnOffNotifications();
+  }
+
   useFocusEffect(
     useCallback(() => {
+      const getSettings = async () => {
+        const tempZone = await getData('yourZone');
+        const settings = await getData('yourSettings');
+        if (!settings) {
+          setSettings('off');
+        } else {
+          setSettings(settings);
+        }
+        setTempZone(tempZone);
+      };
+      // forceRerender()
+      getSettings();
       console.log('this is settings');
       return () => {
         // Do something when the screen is unfocused
         // Useful for cleanup functions
         console.log('Settings NOT IN FOCUS');
         const getSettings = async () => {
+          const tempZone = await getData('yourZone');
           const settings = await getData('yourSettings');
           if (!settings) {
             setSettings('off');
           } else {
             setSettings(settings);
           }
+          setTempZone(tempZone);
         };
-        getSettings().then(() => {
-          setLoading(false);
-        });
-        forceRerender();
+        // getSettings();
+        // forceRerender();
       };
     }, [])
   );
   useEffect(() => {
     const getSettings = async () => {
+      const tempData = await getData('yourZone');
+      setTempZone(tempData);
       const settings = await getData('yourSettings');
       if (!settings) {
         setSettings('off');
@@ -211,6 +241,7 @@ export default function Settings() {
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log(response);
       });
+    // forceRerender();
     return () => {
       // remove notification listeners on unmount
       Notifications.removeNotificationSubscription(
@@ -220,7 +251,17 @@ export default function Settings() {
     };
   }, []);
   if (loading) {
-    return <Text>Loading...</Text>;
+    return (
+      <Box
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Spinner size='lg' color='violet.500' />
+      </Box>
+    );
   }
   return (
     <Box alignItems='center' safeArea>
@@ -257,17 +298,18 @@ export default function Settings() {
                 Play the azan
               </Text>
               <Radio.Group
-                name='exampleGroup'
+                name='soundSettings'
                 defaultValue={settings}
-                onChange={(value) => {
+                value={settings}
+                onChange={async (value) => {
                   setSettings(value);
                   if (value === 'on') {
-                    turnOnNotification();
+                    await turnOnNotification();
                   } else {
-                    turnOffNotifications();
+                    await turnOffNotifications();
                   }
                 }}
-                accessibilityLabel='pick a size'
+                accessibilityLabel='enable/disable sound'
               >
                 <Stack
                   direction={{
@@ -282,7 +324,12 @@ export default function Settings() {
                   w='100%'
                   maxW='300px'
                 >
-                  <Radio value='on' size='sm' my={1}>
+                  <Radio
+                    value='on'
+                    size='sm'
+                    my={1}
+                    isDisabled={tempZone ? false : true}
+                  >
                     On
                   </Radio>
                   <Radio value='off' size='sm' my={1}>
@@ -309,8 +356,7 @@ export default function Settings() {
                   color: 'gray.400',
                 }}
                 onPress={async () => {
-                  await turnOffNotifications();
-                  hardReset();
+                  await harderReset();
                 }}
               >
                 Reset
@@ -319,6 +365,10 @@ export default function Settings() {
           </Stack>
         </Stack>
       </Box>
+      <FetchService />
+      <NotificationService />
+      <LocationService />
+      <StatusBar style='dark' />
     </Box>
   );
 }

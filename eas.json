@@ -7,8 +7,18 @@
       "developmentClient": true,
       "distribution": "internal"
     },
-    "preview": {
-      "distribution": "internal"
+    "local": {
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview2": {
+      "android": {
+        "gradleCommand": ":app:assembleRelease"
+      }
+    },
+    "dev-client": {
+      "developmentClient": true
     },
     "production": {}
   },

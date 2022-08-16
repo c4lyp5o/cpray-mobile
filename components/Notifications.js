@@ -42,9 +42,9 @@ export default function NotificationService() {
   }, []);
 
   return (
-    <Box>
+    <Box margin='2'>
       <Box mb='2'>
-        <Button shadow={2} onPress={schedulePushNotification}>
+        <Button shadow='2' onPress={schedulePushNotification}>
           Trigger Local Notifications
         </Button>
       </Box>

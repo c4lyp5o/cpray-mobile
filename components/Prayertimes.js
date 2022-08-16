@@ -9,7 +9,9 @@ import {
   HStack,
   Stack,
   Heading,
+  Spinner,
 } from 'native-base';
+import { StatusBar } from 'expo-status-bar';
 import { getProfile } from '../lib/Profile';
 import { getData, storeData, timeReminder } from '../lib/Helper';
 
@@ -116,13 +118,23 @@ export default function Prayertimes({
           alignItems: 'center',
         }}
       >
-        <Text>Loading...</Text>
+        <Spinner size='lg' color='violet.500' />
       </Box>
     );
   }
 
   if (timesError) {
-    return <Text>Error: {error.message}</Text>;
+    return (
+      <Box
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Text>Error: {error.message}</Text>;
+      </Box>
+    );
   }
 
   return (
@@ -433,6 +445,7 @@ export default function Prayertimes({
           </HStack>
         </Stack>
       </Box>
+      <StatusBar style='dark' />
     </Box>
   );
 }

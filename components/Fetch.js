@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Text, Box, Button } from 'native-base';
 import { useFocusEffect } from '@react-navigation/native';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
@@ -28,16 +29,6 @@ const BACKGROUND_FETCH_TASK = 'background-azan-setter';
 let setStateFn = () => {
   console.log('State not yet initialized');
 };
-
-async function checkNotificationStatus() {
-  const scheduledOnes = await Notifications.getAllScheduledNotificationsAsync();
-  if (scheduledOnes.length > 0) {
-    console.log('scheduled notifications', scheduledOnes);
-    return scheduledOnes;
-  } else {
-    console.log('no scheduled notifications');
-  }
-}
 
 export default function FetchService() {
   const [isRegistered, setIsRegistered] = useState(false);
@@ -90,7 +81,7 @@ export default function FetchService() {
   }
 
   return (
-    <View>
+    <Box margin='2'>
       <Text>
         Background fetch status:{' '}
         <Text style={styles.boldText}>
@@ -105,17 +96,14 @@ export default function FetchService() {
       </Text>
       <Text>
         Background fetch data:{' '}
-        {/* <Text style={styles.boldText}>{state ? state : 'No data yet!'}</Text> */}
+        <Text style={styles.boldText}>
+          {state ? state.length : 'No data yet!'}
+        </Text>
       </Text>
-      <Button
-        title={
-          isRegistered
-            ? 'Unregister BackgroundFetch task'
-            : 'Register BackgroundFetch task'
-        }
-        onPress={toggleFetchTask}
-      />
-    </View>
+      <Button marginTop={2} shadow={2} onPress={toggleFetchTask}>
+        {isRegistered ? 'Unregister BG task' : 'Register BG task'}
+      </Button>
+    </Box>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Text, Box } from 'native-base';
+import { Spinner, Box } from 'native-base';
+import { StatusBar } from 'expo-status-bar';
 import Intro from '../components/Intro';
 import Zonepicker from '../components/Zonepicker';
 import Prayertimes from '../components/Prayertimes';
@@ -38,7 +39,7 @@ export default function Home() {
           alignItems: 'center',
         }}
       >
-        <Text>Loading...</Text>
+        <Spinner size='lg' color='violet.500' />
       </Box>
     );
   }
@@ -61,6 +62,7 @@ export default function Home() {
           setShowZonePicker={setShowZonePicker}
         />
       )}
+      <StatusBar style='dark' />
     </Box>
   );
 }

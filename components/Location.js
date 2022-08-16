@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Platform, Text, View, StyleSheet, Button } from 'react-native';
+import { StyleSheet } from 'react-native';
 import * as Location from 'expo-location';
-import { Box } from 'native-base';
+import { Box, Text, Button } from 'native-base';
 
 export default function LocationService() {
   const [location, setLocation] = useState(null);
@@ -37,17 +37,14 @@ export default function LocationService() {
   }
 
   return (
-    <View>
-      <Button
-        onPress={getLocation}
-        title='Get Location'
-        color='#841584'
-        accessibilityLabel='Get Location'
-      />
+    <Box margin='2'>
+      <Button onPress={getLocation} shadow={2}>
+        Get Location
+      </Button>
       <Box alignItems='center' justifyContent='center'>
         <Text style={styles.textContainer}>{text}</Text>
       </Box>
-    </View>
+    </Box>
   );
 }
 

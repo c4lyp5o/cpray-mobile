@@ -29,7 +29,7 @@ export default function App() {
           <Drawer.Screen name='Waktu Solat' component={Home} />
           <Drawer.Screen name='Settings' component={Settings} />
           <Drawer.Screen name='About' component={About} />
-          <Drawer.Screen name='Dev Page' component={Devpage} />
+          {/* <Drawer.Screen name='Dev Page' component={Devpage} /> */}
         </Drawer.Navigator>
       </NativeBaseProvider>
     </NavigationContainer>
