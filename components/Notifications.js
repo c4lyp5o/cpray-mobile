@@ -1,48 +1,17 @@
 import * as Notifications from 'expo-notifications';
 import { Box, Button, Text } from 'native-base';
-import React, { useState, useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
+import { useState } from 'react';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
-
-export default function NotificationService() {
-  const [notification, setNotification] = useState(false);
+export default function NotificationService({ notification }) {
   const [notfCount, setNotfCount] = useState();
-  const notificationListener = useRef();
-  const responseListener = useRef();
-
-  useEffect(() => {
-    registerForPushNotificationsAsync();
-
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        setNotification(notification);
-      });
-
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
-      });
-
-    console.log('registered notification listeners');
-
-    return () => {
-      console.log('unregistered listener');
-      Notifications.removeNotificationSubscription(
-        notificationListener.current
-      );
-      Notifications.removeNotificationSubscription(responseListener.current);
-    };
-  }, []);
 
   return (
-    <Box margin='2'>
+    <Box maxW='90%'>
+      <Box mb='2'>
+        <Text marginTop={2} fontSize='xs' textAlign='center'>
+          Notification Service: {notification ? 'on' : 'off'}
+        </Text>
+      </Box>
       <Box mb='2'>
         <Button shadow='2' onPress={schedulePushNotification}>
           Trigger Local Notifications
@@ -69,19 +38,20 @@ export default function NotificationService() {
           Check Present Notifications
         </Button>
         {notfCount ? (
-          <Text marginTop={3}>
+          <Text marginTop={2} fontSize='xs'>
             {notfCount.map((item, index) => {
               return (
                 <Text key={index}>
-                  {item.content.title} - {item.content.body} - {item.identifier}{' '}
-                  - {item.trigger.seconds} seconds{'\n'}
+                  {item.content.title} - {item.trigger.seconds} seconds{'\n'}
                   {'\n'}
                 </Text>
               );
             })}
           </Text>
         ) : (
-          <Text>No scheduled notif</Text>
+          <Text textAlign='center' mt={1}>
+            No scheduled notif
+          </Text>
         )}
       </Box>
     </Box>
@@ -97,21 +67,6 @@ async function schedulePushNotification() {
     },
     trigger: { channelId: 'azan-app', seconds: 5 },
   });
-}
-
-async function registerForPushNotificationsAsync() {
-  if (Platform.OS === 'android') {
-    Notifications.setNotificationChannelAsync('azan-app', {
-      name: 'Azan App',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      sound: 'azan.wav',
-      lightColor: '#FF231F7C',
-      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-      bypassDnd: true,
-    });
-  }
-  console.log('registered notification channel');
 }
 
 async function checkNotificationStatus() {

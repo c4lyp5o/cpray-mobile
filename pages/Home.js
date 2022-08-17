@@ -32,19 +32,30 @@ export default function Home() {
   }, []);
   if (loading) {
     return (
-      <Box
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
+      <Box flex={1} justifyContent='center' alignItems='center'>
         <Spinner size='lg' color='violet.500' />
       </Box>
     );
   }
   return (
-    <Box safeArea>
+    <Box
+      w='full'
+      h='full'
+      overflow='hidden'
+      borderColor='coolGray.200'
+      borderWidth='1'
+      _dark={{
+        borderColor: 'coolGray.600',
+        backgroundColor: 'gray.700',
+      }}
+      _web={{
+        shadow: 2,
+        borderWidth: 0,
+      }}
+      _light={{
+        backgroundColor: 'gray.50',
+      }}
+    >
       {showZonePicker && (
         <Intro>
           <Zonepicker

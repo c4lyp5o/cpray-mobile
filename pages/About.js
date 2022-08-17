@@ -1,10 +1,11 @@
 import React from 'react';
 import { Box, Text, AspectRatio, Image, Stack, Heading } from 'native-base';
+import { StatusBar } from 'expo-status-bar';
 import { Linking } from 'react-native';
 
 export default function About() {
   return (
-    <Box safeArea>
+    <Box>
       <Box
         maxW='full'
         rounded='lg'
@@ -65,6 +66,7 @@ export default function About() {
           </Text>
         </Stack>
       </Box>
+      <StatusBar style='dark' />
     </Box>
   );
 }

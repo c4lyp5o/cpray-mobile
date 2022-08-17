@@ -99,14 +99,14 @@ async function schedulePushNotification(waktu, ttt) {
       body: 'Hayya alassolah',
       data: { data: `Masuk Waktu ${waktu}` },
     },
-    trigger: { channelId: 'azan-app', seconds: ttt },
+    trigger: { channelId: 'NNWS', seconds: ttt },
   });
 }
 
 async function registerForPushNotificationsAsync() {
   if (Platform.OS === 'android') {
-    Notifications.setNotificationChannelAsync('azan-app', {
-      name: 'Azan App',
+    Notifications.setNotificationChannelAsync('NNWS', {
+      name: 'NNWS',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       sound: 'azan.wav',
@@ -155,6 +155,12 @@ export default function Settings() {
       for (let i = 0; i < timers.length; i += 2) {
         await schedulePushNotification(timers[i], timers[i + 1]);
       }
+      toast.show({
+        text: 'Azan telah diaktifkan',
+        type: 'success',
+        position: 'top',
+        duration: 3000,
+      });
     } catch (error) {
       console.log(error);
     }
@@ -172,6 +178,12 @@ export default function Settings() {
         notificationListener.current
       );
       Notifications.removeNotificationSubscription(responseListener.current);
+      toast.show({
+        text: 'Azan telah diberhentikan',
+        type: 'success',
+        position: 'top',
+        duration: 3000,
+      });
     } catch (error) {
       console.log(error);
     }
@@ -182,53 +194,38 @@ export default function Settings() {
     setTempZone(null);
     await hardReset();
     await turnOffNotifications();
+    toast.show({
+      text: 'Azan telah direset',
+      type: 'success',
+      position: 'top',
+      duration: 3000,
+    });
   }
+
+  const getSettings = async () => {
+    const tempData = await getData('yourZone');
+    const settings = await getData('yourSettings');
+    if (!settings) {
+      setSettings('off');
+    } else {
+      setSettings(settings);
+    }
+    setTempZone(tempData);
+  };
 
   useFocusEffect(
     useCallback(() => {
-      const getSettings = async () => {
-        const tempZone = await getData('yourZone');
-        const settings = await getData('yourSettings');
-        if (!settings) {
-          setSettings('off');
-        } else {
-          setSettings(settings);
-        }
-        setTempZone(tempZone);
-      };
-      // forceRerender()
       getSettings();
+      // forceRerender()
       console.log('this is settings');
       return () => {
-        // Do something when the screen is unfocused
-        // Useful for cleanup functions
         console.log('Settings NOT IN FOCUS');
-        const getSettings = async () => {
-          const tempZone = await getData('yourZone');
-          const settings = await getData('yourSettings');
-          if (!settings) {
-            setSettings('off');
-          } else {
-            setSettings(settings);
-          }
-          setTempZone(tempZone);
-        };
         // getSettings();
         // forceRerender();
       };
     }, [])
   );
   useEffect(() => {
-    const getSettings = async () => {
-      const tempData = await getData('yourZone');
-      setTempZone(tempData);
-      const settings = await getData('yourSettings');
-      if (!settings) {
-        setSettings('off');
-      } else {
-        setSettings(settings);
-      }
-    };
     getSettings().then(() => {
       setLoading(false);
     });
@@ -243,7 +240,6 @@ export default function Settings() {
       });
     // forceRerender();
     return () => {
-      // remove notification listeners on unmount
       Notifications.removeNotificationSubscription(
         notificationListener.current
       );
@@ -264,7 +260,7 @@ export default function Settings() {
     );
   }
   return (
-    <Box alignItems='center' safeArea>
+    <Box alignItems='center' w='full'>
       <Box
         w='90%'
         mt={3}
@@ -365,9 +361,34 @@ export default function Settings() {
           </Stack>
         </Stack>
       </Box>
-      <FetchService />
-      <NotificationService />
-      <LocationService />
+      <Box
+        w='90%'
+        mt={3}
+        rounded='lg'
+        overflow='hidden'
+        alignContent='center'
+        justifyContent='center'
+        alignItems='center'
+        borderColor='coolGray.200'
+        borderWidth='1'
+        _dark={{
+          borderColor: 'coolGray.600',
+          backgroundColor: 'gray.700',
+        }}
+        _web={{
+          shadow: 2,
+          borderWidth: 0,
+        }}
+        _light={{
+          backgroundColor: 'gray.50',
+        }}
+      >
+        {/* Development Tools */}
+        <FetchService backgroundFetchTask={BACKGROUND_FETCH_TASK} />
+        <NotificationService notification={notification} />
+        <LocationService />
+        {/* Development Tools */}
+      </Box>
       <StatusBar style='dark' />
     </Box>
   );
