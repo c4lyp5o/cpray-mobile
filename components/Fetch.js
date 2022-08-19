@@ -1,47 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Text, Box } from 'native-base';
-import { useFocusEffect } from '@react-navigation/native';
-import * as BackgroundFetch from 'expo-background-fetch';
-import * as TaskManager from 'expo-task-manager';
+import { useEffect } from 'react';
+import { Text, Box, Button } from 'native-base';
+import { useNNWSStore } from '../lib/Context';
 
-export default function FetchService({ backgroundFetchTask }) {
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [status, setStatus] = useState(null);
-
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     console.log('---------this is fetch service------------');
-  //     checkStatusAsync();
-  //   })
-  // );
+export default function FetchService() {
+  const {
+    BACKGROUND_FETCH_TASK,
+    registerBackgroundFetchAsyncTest,
+    checkBackgroundFetchStatusAsync,
+    bgIsRegistered,
+    bgFetchStatus,
+  } = useNNWSStore();
 
   useEffect(() => {
-    checkStatusAsync();
-  }, []);
-
-  const checkStatusAsync = async () => {
-    const status = await BackgroundFetch.getStatusAsync();
-    const isRegistered = await TaskManager.isTaskRegisteredAsync(
-      backgroundFetchTask
-    );
-    setStatus(status);
-    setIsRegistered(isRegistered);
-    console.log('Background fetch status:', status);
-    console.log('Is fetch registered', isRegistered);
-  };
+    checkBackgroundFetchStatusAsync();
+  }, [bgIsRegistered]);
 
   return (
-    <Box mt={5}>
-      <Text>
-        Background fetch status:{' '}
-        <Text>{status && BackgroundFetch.BackgroundFetchStatus[status]}</Text>
+    <Box mt={2}>
+      <Text fontSize='xs'>
+        Background fetch status: <Text fontSize='xs'>{bgFetchStatus}</Text>
       </Text>
-      <Text>
+      <Text fontSize='xs'>
         Background fetch task name:{' '}
-        <Text>
-          {isRegistered ? backgroundFetchTask : 'Not registered yet!'}
+        <Text fontSize='xs'>
+          {bgIsRegistered ? BACKGROUND_FETCH_TASK : 'Not registered yet!'}
         </Text>
       </Text>
+      <Button
+        shadow='2'
+        onPress={registerBackgroundFetchAsyncTest}
+        size='xs'
+        mt={1}
+      >
+        Test BG Fetch (1 min)
+      </Button>
     </Box>
   );
 }

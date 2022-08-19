@@ -1,30 +1,26 @@
-import { useState } from 'react';
-import * as Location from 'expo-location';
 import { Box, Text, Button } from 'native-base';
+import { useNNWSStore } from '../lib/Context';
 
 export default function LocationService() {
-  const [location, setLocation] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
-
-  const getLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      setErrorMsg('Permission to access location was denied');
-    }
-
-    let location = await Location.getCurrentPositionAsync({});
-    setLocation(location);
-  };
-
+  const { getLocation, location, locationErrorMsg, appStateVisible } =
+    useNNWSStore();
   return (
     <Box w='90%'>
       <Box>
-        <Button onPress={getLocation} shadow={2}>
+        <Button onPress={getLocation} shadow={2} size='xs'>
           Get Location
         </Button>
       </Box>
       <Box marginTop={2} alignItems='center' justifyContent='center'>
-        <Text>{location ? JSON.stringify(location) : errorMsg}</Text>
+        <Text fontSize='xs'>
+          Location data:{' '}
+          {location
+            ? JSON.stringify(location)
+            : `${locationErrorMsg ? locationErrorMsg : 'Not data yet'}`}
+        </Text>
+      </Box>
+      <Box marginBottom={2} alignItems='center' justifyContent='center'>
+        <Text fontSize='xs'>Current state is: {appStateVisible}</Text>
       </Box>
     </Box>
   );

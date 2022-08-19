@@ -1,11 +1,16 @@
 import { Box, Select, Button, CheckCircleIcon } from 'native-base';
 import { storeData } from '../lib/Helper';
+import { useNNWSStore } from '../lib/Context';
 
-export default function Zonepicker({
-  refZone,
-  setShowZonePicker,
-  setZoneData,
-}) {
+export default function Zonepicker({ refZone, setShowZonePicker }) {
+  const { setState } = useNNWSStore();
+  const handleSubmit = async () => {
+    await storeData('yourZone', refZone.current);
+    setState((prevState) => ({ ...prevState, yourZone: refZone.current }));
+    setTimeout(() => {
+      setShowZonePicker(false);
+    }, 500);
+  };
   return (
     <Box w='full'>
       <Select
@@ -172,17 +177,8 @@ export default function Zonepicker({
       <Button
         marginTop={4}
         backgroundColor='violet.500'
-        onPress={() => {
-          storeData('yourZone', refZone.current)
-            .then(() => {
-              setZoneData(refZone.current);
-              setTimeout(() => {
-                setShowZonePicker(false);
-              }, 500);
-            })
-            .catch((error) => {
-              console.log(error);
-            });
+        onPress={async () => {
+          await handleSubmit();
         }}
       >
         Set Timezone

@@ -1,23 +1,56 @@
 import { useState, useRef, useEffect } from 'react';
 import { Spinner, Box } from 'native-base';
 import { StatusBar } from 'expo-status-bar';
+import { useNNWSStore } from '../lib/Context';
 import Intro from '../components/Intro';
 import Zonepicker from '../components/Zonepicker';
 import Prayertimes from '../components/Prayertimes';
 import { getData } from '../lib/Helper';
 
 export default function Home() {
+  const { setState, state } = useNNWSStore();
   const refZone = useRef(null);
   const [showZonePicker, setShowZonePicker] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [zoneData, setZoneData] = useState(null);
+
   useEffect(() => {
-    const getZoneData = async () => {
+    console.log('-------------this is the start of the app--------------');
+    const getStoredData = async () => {
+      // try {
+      //   const data = await getData('yourData');
+      //   console.log('HOME: data:', data);
+      //   if (!data) {
+      //     return;
+      //   }
+      //   setState((prevState) => ({
+      //     ...prevState,
+      //     yourZone: data.yourZone,
+      //     yourTime: new Date(),
+      //   }));
+      // } catch (error) {
+      //   console.log(error);
+      // }
+      // await getData('yourData').then((data) => {
+      //   console.log('HOME: data:', data);
+      //   if (!data) {
+      //     return;
+      //   }
+      //   setZone(data.yourZone);
+      // setState((prevState) => ({
+      //   ...prevState,
+      //   yourZone: data.yourZone,
+      //   yourTime: new Date(),
+      // }));
+      // });
       console.log('-------------this is the start of the app--------------');
       const zone = await getData('yourZone');
       if (zone) {
         console.log('zone:', zone);
-        setZoneData(zone);
+        setState((prevState) => ({
+          ...prevState,
+          yourZone: zone,
+          yourTime: new Date(),
+        }));
         setTimeout(() => {
           setLoading(false);
           setShowZonePicker(false);
@@ -28,8 +61,21 @@ export default function Home() {
         setShowZonePicker(true);
       }
     };
-    getZoneData();
+    getStoredData();
+    // .then(() => {
+    //   if (!zone) {
+    //     console.log('HOME: No zone');
+    //     setShowZonePicker(true);
+    //   } else {
+    //     console.log('HOME: zone is, ', state.yourZone);
+    //     setShowZonePicker(false);
+    //   }
+    //   setTimeout(() => {
+    //     setLoading(false);
+    //   }, 1000);
+    // });
   }, []);
+
   if (loading) {
     return (
       <Box flex={1} justifyContent='center' alignItems='center'>
@@ -37,6 +83,7 @@ export default function Home() {
       </Box>
     );
   }
+
   return (
     <Box
       w='full'
@@ -61,14 +108,14 @@ export default function Home() {
           <Zonepicker
             refZone={refZone}
             setShowZonePicker={setShowZonePicker}
-            setZoneData={setZoneData}
+            // setZoneData={setZoneData}
           />
         </Intro>
       )}
       {!showZonePicker && (
         <Prayertimes
           refZone={refZone}
-          zoneData={zoneData}
+          // zoneData={zoneData}
           setLoading={setLoading}
           setShowZonePicker={setShowZonePicker}
         />

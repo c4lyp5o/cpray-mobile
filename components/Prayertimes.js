@@ -11,20 +11,34 @@ import {
   Heading,
   Spinner,
 } from 'native-base';
+import { useNNWSStore } from '../lib/Context';
 import { getProfile } from '../lib/Profile';
 import { getData, storeData, timeReminder } from '../lib/Helper';
 
-export default function Prayertimes({
-  zoneData,
-  setLoading,
-  setShowZonePicker,
-}) {
-  const [timeNow, setTimeNow] = useState(new Date());
+export default function Prayertimes({ setLoading, setShowZonePicker }) {
+  const { appState, setState, state } = useNNWSStore();
+  const refZone = useRef(null);
   const tempReminderData = useRef();
   const tempTimesData = useRef();
-  const [times, setTimes] = useState([]);
+  const counter = useRef(0);
   const [timesError, setTimesError] = useState(null);
   const [timesLoading, setTimesLoading] = useState(true);
+
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     if (counter.current === 0) {
+  //       return;
+  //     }
+  //     console.log('PRAYERTIMES: Prayertimes IN FOCUS');
+  //     focusEffectService();
+  //     setTimeout(() => {
+  //       intervalService();
+  //     }, 500);
+  //     return () => {
+  //       console.log('PRAYERTIMES: Prayertimes NOT IN FOCUS');
+  //     };
+  //   }, [])
+  // );
 
   useFocusEffect(
     useCallback(() => {
@@ -39,44 +53,44 @@ export default function Prayertimes({
   );
 
   useEffect(() => {
-    console.log('Prayertimes MOUNTED');
+    // console.log('PRAYERTIMES: Prayertimes MOUNTED');
     const fetchTimes = async () => {
-      console.log('Fetching data in Prayertimes');
-      fetch(`https://api.waktusolat.me/waktusolat/today/${zoneData}`)
-        .then((response) => response.json())
-        .then((json) => {
-          firstInit(json);
-          storeData('yourTimes', json);
-          setTimes(json);
-          setTimeout(() => {
-            setTimesLoading(false);
-          }, 500);
-        })
-        .catch((error) => {
-          setTimesError(error);
-          setTimesLoading(false);
-        });
+      try {
+        console.log('PRAYERTIMES: Fetching data');
+        const data = await fetch(
+          `https://api.waktusolat.me/waktusolat/today/${state.yourZone}`
+        );
+        const json = await data.json();
+        refZone.current = state.yourZone;
+        setState((prevState) => ({ ...prevState, yourTimes: json }));
+        tempTimesData.current = json;
+        const tempRemind = await timeReminder(json);
+        tempReminderData.current = tempRemind;
+      } catch (e) {
+        console.log(e);
+        setTimesError(e);
+      }
     };
     const cacheService = async () => {
       const timesData = await getData('yourTimes');
       if (timesData) {
         console.log('Using stored times data');
-        setTimes(timesData);
         setTimesLoading(false);
       } else {
         console.log('No times data');
         fetchTimes(); // saved to async storage
       }
     };
-    const firstInit = async (data) => {
-      tempTimesData.current = data;
-      timeReminder(data)
-        .then((timeReminderData) => {
-          tempReminderData.current = timeReminderData;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+    const saveToStore = async () => {
+      try {
+        let testSave = {};
+        testSave = { ...testSave, ...state };
+        await storeData('yourData', testSave);
+        await storeData('yourZone', state.yourZone);
+        await storeData('yourTimes', state.yourTimes);
+      } catch (e) {
+        console.log(e);
+      }
     };
     // const intervalService = () => {
     //   // console.log('running interval:' + prevInt);
@@ -90,14 +104,34 @@ export default function Prayertimes({
     //     });
     // };
     // cacheService();
-    fetchTimes();
+    fetchTimes()
+      .then(() => {
+        setTimeout(() => {
+          setTimesLoading(false);
+        }, 500);
+      })
+      .then(() => {
+        setTimeout(() => {
+          saveToStore();
+        }, 2000);
+      });
+
     // const prevInt = setInterval(() => intervalService(), 60000);
     // console.log('Prayertimes interval set to: ' + prevInt);
     return () => {
       // clearInterval(prevInt);
-      console.log(`Prayertimes UNMOUNTED`);
+      console.log(`PRAYERTIMES: Prayertimes UNMOUNTED`);
     };
   }, []);
+
+  // useEffect(() => {
+  //   const saveAllData = async () => {
+  //     let tempData = { ...state };
+  //     await storeData('yourData', tempData);
+  //     console.log(tempData);
+  //   };
+  //   console.log('times has changed');
+  // }, [state.yourTimes]);
 
   const focusEffectService = async () => {
     getData('yourZone').then((res) => {
@@ -114,8 +148,8 @@ export default function Prayertimes({
   };
 
   const intervalService = () => {
-    console.log('interval service called');
-    setTimeNow(new Date());
+    console.log('PRAYERTIMES: interval service called');
+    setState((prevState) => ({ ...prevState, yourTime: new Date() }));
     timeReminder(tempTimesData.current)
       .then((timeReminderData) => {
         tempReminderData.current = timeReminderData;
@@ -147,13 +181,28 @@ export default function Prayertimes({
     );
   }
 
+  // if (appState.current === 'active' && counter.current === 1) {
+  //   console.log(
+  //     'PRAYERTIMES: from background, calling focusEffectService and intervalService'
+  //   );
+  //   focusEffectService();
+  //   setTimeout(() => {
+  //     intervalService();
+  //   }, 500);
+  //   counter.current += 1;
+  // }
+
+  // if (appState.current === 'background' && counter.current === 1) {
+  //   counter.current = 0;
+  // }
+
   return (
     <Box w='full'>
       <Box>
         <AspectRatio w='100%' maxH='full' ratio={16 / 9}>
           <Image
             source={{
-              uri: getProfile(zoneData).picture,
+              uri: getProfile(state.yourZone).picture,
             }}
             alt='image'
           />
@@ -179,7 +228,7 @@ export default function Prayertimes({
       <Stack p='4' space={3}>
         <Stack space={2}>
           <Heading size='md' ml='-1'>
-            {times.zone}
+            {state.yourTimes.zone}
           </Heading>
           <Text
             fontSize='md'
@@ -193,7 +242,7 @@ export default function Prayertimes({
             ml='-0.5'
             mt='-1'
           >
-            {times.negeri}
+            {state.yourTimes.negeri}
           </Text>
           <Text
             fontSize='md'
@@ -207,9 +256,9 @@ export default function Prayertimes({
             ml='-0.5'
             mt='-1'
           >
-            {times.today.day.split(' / ')[0]},{' '}
-            {times.today.hijri.split(' / ')[1]},{' '}
-            {times.today.date.split(' / ')[1]}
+            {state.yourTimes.today.day.split(' / ')[0]},{' '}
+            {state.yourTimes.today.hijri.split(' / ')[1]},{' '}
+            {state.yourTimes.today.date.split(' / ')[1]}
           </Text>
         </Stack>
         <Box alignItems='center'>
@@ -234,7 +283,7 @@ export default function Prayertimes({
             <Stack p='4' space={3}>
               <Stack space={2}>
                 <Heading size='2xl' ml='-1' textAlign='center'>
-                  {timeNow.toLocaleTimeString('en-GB').slice(0, 5)}
+                  {new Date().toLocaleTimeString('en-GB').slice(0, 5)}
                 </Heading>
               </Stack>
               <Text
@@ -283,7 +332,7 @@ export default function Prayertimes({
                     Subuh
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{times.data[0].fajr}</Text>
+                <Text fontWeight='400'>{state.yourTimes.data[0].fajr}</Text>
               </Stack>
             </Box>
           </Box>
@@ -312,7 +361,7 @@ export default function Prayertimes({
                     Syuruk
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{times.data[0].syuruk}</Text>
+                <Text fontWeight='400'>{state.yourTimes.data[0].syuruk}</Text>
               </Stack>
             </Box>
           </Box>
@@ -341,7 +390,7 @@ export default function Prayertimes({
                     Zuhur
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{times.data[0].dhuhr}</Text>
+                <Text fontWeight='400'>{state.yourTimes.data[0].dhuhr}</Text>
               </Stack>
             </Box>
           </Box>
@@ -372,7 +421,7 @@ export default function Prayertimes({
                     Asar
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{times.data[0].asr}</Text>
+                <Text fontWeight='400'>{state.yourTimes.data[0].asr}</Text>
               </Stack>
             </Box>
           </Box>
@@ -401,7 +450,7 @@ export default function Prayertimes({
                     Maghrib
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{times.data[0].maghrib}</Text>
+                <Text fontWeight='400'>{state.yourTimes.data[0].maghrib}</Text>
               </Stack>
             </Box>
           </Box>
@@ -430,7 +479,7 @@ export default function Prayertimes({
                     Isha'
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{times.data[0].isha}</Text>
+                <Text fontWeight='400'>{state.yourTimes.data[0].isha}</Text>
               </Stack>
             </Box>
           </Box>

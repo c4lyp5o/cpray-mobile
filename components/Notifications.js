@@ -1,8 +1,14 @@
-import * as Notifications from 'expo-notifications';
 import { Box, Button, Text } from 'native-base';
 import { useState } from 'react';
+import { useNNWSStore } from '../lib/Context';
 
-export default function NotificationService({ notification }) {
+export default function NotificationService() {
+  const {
+    checkNotificationStatus,
+    notification,
+    scheduleTestPushNotification,
+    cancelAllScheduledNotificationsAsync,
+  } = useNNWSStore();
   const [notfCount, setNotfCount] = useState();
 
   return (
@@ -13,15 +19,16 @@ export default function NotificationService({ notification }) {
         </Text>
       </Box>
       <Box mb='2'>
-        <Button shadow='2' onPress={schedulePushNotification}>
+        <Button shadow='2' onPress={scheduleTestPushNotification} size='xs'>
           Trigger Local Notifications
         </Button>
       </Box>
       <Box mb='2'>
         <Button
+          size='xs'
           shadow={2}
           onPress={async () => {
-            await Notifications.cancelAllScheduledNotificationsAsync();
+            await cancelAllScheduledNotificationsAsync();
           }}
         >
           Delete all pending notifications
@@ -29,6 +36,7 @@ export default function NotificationService({ notification }) {
       </Box>
       <Box mb='2'>
         <Button
+          size='xs'
           shadow={2}
           onPress={async () => {
             const temp = await checkNotificationStatus();
@@ -49,32 +57,11 @@ export default function NotificationService({ notification }) {
             })}
           </Text>
         ) : (
-          <Text textAlign='center' mt={1}>
+          <Text textAlign='center' mt={1} fontSize='xs'>
             No scheduled notif
           </Text>
         )}
       </Box>
     </Box>
   );
-}
-
-async function schedulePushNotification() {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Masuk Waktu',
-      body: 'Hayya alassolah',
-      data: { data: 'supposed to ada sound lah' },
-    },
-    trigger: { channelId: 'azan-app', seconds: 5 },
-  });
-}
-
-async function checkNotificationStatus() {
-  const scheduledOnes = await Notifications.getAllScheduledNotificationsAsync();
-  if (scheduledOnes.length > 0) {
-    console.log('scheduled notifications', scheduledOnes);
-    return scheduledOnes;
-  } else {
-    console.log('no scheduled notifications');
-  }
 }
