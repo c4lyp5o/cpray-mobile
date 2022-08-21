@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
+  Animated,
   Box,
   Center,
   Text,
@@ -20,7 +21,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
   const refZone = useRef(null);
   const tempReminderData = useRef();
   const tempTimesData = useRef();
-  const counter = useRef(0);
+  const counter = useRef(1);
   const [timesError, setTimesError] = useState(null);
   const [timesLoading, setTimesLoading] = useState(true);
 
@@ -42,21 +43,23 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
 
   useFocusEffect(
     useCallback(() => {
-      focusEffectService();
-      setTimeout(() => {
-        intervalService();
-      }, 1000);
+      if (counter.current === 1) {
+        console.log('PRAYERTIMES: counter is', counter.current);
+        focusEffectService();
+        setTimeout(() => {
+          intervalService();
+        }, 500);
+      }
       return () => {
-        console.log('Prayertimes NOT IN FOCUS');
+        console.log('PRAYERTIMES: NOT IN FOCUS');
       };
     }, [])
   );
 
   useEffect(() => {
-    // console.log('PRAYERTIMES: Prayertimes MOUNTED');
     const fetchTimes = async () => {
       try {
-        console.log('PRAYERTIMES: Fetching data');
+        console.log('PRAYERTIMES: Fetching times');
         const data = await fetch(
           `https://api.waktusolat.me/waktusolat/today/${state.yourZone}`
         );
@@ -65,6 +68,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
         setState((prevState) => ({ ...prevState, yourTimes: json }));
         tempTimesData.current = json;
         const tempRemind = await timeReminder(json);
+        setState((prevState) => ({ ...prevState, yourReminder: tempRemind }));
         tempReminderData.current = tempRemind;
       } catch (e) {
         console.log(e);
@@ -86,7 +90,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
         let testSave = {};
         testSave = { ...testSave, ...state };
         await storeData('yourData', testSave);
-        await storeData('yourZone', state.yourZone);
+        // await storeData('yourZone', state.yourZone);
         await storeData('yourTimes', state.yourTimes);
       } catch (e) {
         console.log(e);
@@ -104,18 +108,14 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
     //     });
     // };
     // cacheService();
-    fetchTimes()
-      .then(() => {
-        setTimeout(() => {
-          setTimesLoading(false);
-        }, 500);
-      })
-      .then(() => {
-        setTimeout(() => {
-          saveToStore();
-        }, 2000);
-      });
-
+    fetchTimes().then(() => {
+      setTimeout(() => {
+        setTimesLoading(false);
+      }, 200);
+      setTimeout(() => {
+        saveToStore();
+      }, 2000);
+    });
     // const prevInt = setInterval(() => intervalService(), 60000);
     // console.log('Prayertimes interval set to: ' + prevInt);
     return () => {
@@ -135,7 +135,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
 
   const focusEffectService = async () => {
     getData('yourZone').then((res) => {
-      console.log('Prayertimes focuseffect checking zone:', res);
+      console.log('PRAYERTIMES: focuseffect checking zone:', res);
       if (!res) {
         setTimesLoading(true);
         setLoading(true);
@@ -181,20 +181,20 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
     );
   }
 
-  // if (appState.current === 'active' && counter.current === 1) {
-  //   console.log(
-  //     'PRAYERTIMES: from background, calling focusEffectService and intervalService'
-  //   );
-  //   focusEffectService();
-  //   setTimeout(() => {
-  //     intervalService();
-  //   }, 500);
-  //   counter.current += 1;
-  // }
+  if (appState.current === 'active' && counter.current === 0) {
+    console.log(
+      'PRAYERTIMES: from background, calling focusEffectService and intervalService'
+    );
+    focusEffectService();
+    setTimeout(() => {
+      intervalService();
+    }, 500);
+    counter.current += 1;
+  }
 
-  // if (appState.current === 'background' && counter.current === 1) {
-  //   counter.current = 0;
-  // }
+  if (appState.current === 'background' && counter.current === 1) {
+    counter.current = 0;
+  }
 
   return (
     <Box w='full'>

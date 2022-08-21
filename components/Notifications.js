@@ -1,21 +1,51 @@
-import { Box, Button, Text } from 'native-base';
-import { useState } from 'react';
+import { Box, Button, Text, Spinner } from 'native-base';
+import { useState, useEffect } from 'react';
 import { useNNWSStore } from '../lib/Context';
 
 export default function NotificationService() {
   const {
+    test,
     checkNotificationStatus,
     notification,
     scheduleTestPushNotification,
     cancelAllScheduledNotificationsAsync,
   } = useNNWSStore();
   const [notfCount, setNotfCount] = useState();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const hereAndNow = async () => {
+      try {
+        const temp = await checkNotificationStatus();
+        setNotfCount(temp);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    hereAndNow().then(() => {
+      setLoading(false);
+    });
+  }, [test]);
+
+  if (loading) {
+    return (
+      <Box
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Spinner size='lg' color='violet.500' />
+      </Box>
+    );
+  }
 
   return (
     <Box maxW='90%'>
       <Box mb='2'>
         <Text marginTop={2} fontSize='xs' textAlign='center'>
-          Notification Service: {notification ? 'on' : 'off'}
+          Notification Service: {notfCount ? 'on' : 'off'}
         </Text>
       </Box>
       <Box mb='2'>

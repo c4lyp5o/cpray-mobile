@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -23,7 +23,7 @@ import {
 } from '../lib/Helper';
 
 export default function Settings() {
-  const { state, turnOffNotifications, turnOnNotifications } = useNNWSStore();
+  const { turnOffNotifications, turnOnNotifications } = useNNWSStore();
   const toast = useToast();
   const [tempZone, setTempZone] = useState(null);
   const [settings, setSettings] = useState(false);
@@ -42,10 +42,13 @@ export default function Settings() {
   const getSettings = async () => {
     try {
       const dataStore = await getData('yourSettings');
-      if (!dataStore) {
+      const zoneStore = await getData('yourZone');
+      if (!dataStore && !zoneStore) {
         setSettings('off');
+        setTempZone(null);
       } else {
         setSettings(dataStore);
+        setTempZone(zoneStore);
       }
     } catch (error) {
       console.log(error);
@@ -56,13 +59,13 @@ export default function Settings() {
     useCallback(() => {
       console.log('SETTINGS: in focus');
       getSettings().then(() => {
-        setTempZone(state.yourZone);
+        // setTempZone(state.yourZone);
         setLoading(false);
       });
       return () => {
         console.log('SETTINGS: not in focus');
         getSettings().then(() => {
-          setTempZone(state.yourZone);
+          // setTempZone(state.yourZone);
           setLoading(false);
         });
       };
@@ -71,15 +74,15 @@ export default function Settings() {
 
   useEffect(() => {
     getSettings()
-      .then(() => {
-        setTempZone(state.yourZone);
-      })
+      // .then(() => {
+      //   setTempZone(state.yourZone);
+      // })
       .then(() => {
         setLoading(false);
       });
     // forceRerender();
     return () => {};
-  }, []);
+  }, [settings]);
 
   if (loading) {
     return (
@@ -218,7 +221,7 @@ export default function Settings() {
         <LocationService />
         {/* Development Tools */}
       </Box>
-      <StatusBar style='dark' />
+      <StatusBar style='light' />
     </Box>
   );
 }

@@ -18,6 +18,12 @@ export default function App() {
         <NativeBaseProvider>
           <Drawer.Navigator
             initialRouteName='Waktu Solat'
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: '#803790',
+              },
+              headerTintColor: '#fff',
+            }}
             drawerContent={(props) => <DrawerContent {...props} />}
           >
             <Drawer.Screen name='Waktu Solat' component={Home} />

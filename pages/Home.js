@@ -42,10 +42,9 @@ export default function Home() {
       //   yourTime: new Date(),
       // }));
       // });
-      console.log('-------------this is the start of the app--------------');
       const zone = await getData('yourZone');
       if (zone) {
-        console.log('zone:', zone);
+        console.log('HOME: zone is', zone);
         setState((prevState) => ({
           ...prevState,
           yourZone: zone,
@@ -56,7 +55,7 @@ export default function Home() {
           setShowZonePicker(false);
         }, 300);
       } else {
-        console.log('No zone data');
+        console.log('HOME: No zone data');
         setLoading(false);
         setShowZonePicker(true);
       }
@@ -120,7 +119,7 @@ export default function Home() {
           setShowZonePicker={setShowZonePicker}
         />
       )}
-      <StatusBar style='dark' />
+      <StatusBar style='light' />
     </Box>
   );
 }

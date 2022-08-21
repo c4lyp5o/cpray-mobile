@@ -5,9 +5,10 @@ import { Linking } from 'react-native';
 
 export default function About() {
   return (
-    <Box>
+    <Box alignItems='center' w='full'>
       <Box
-        maxW='full'
+        w='90%'
+        mt={3}
         rounded='lg'
         overflow='hidden'
         borderColor='coolGray.200'
@@ -24,7 +25,7 @@ export default function About() {
           backgroundColor: 'gray.50',
         }}
       >
-        <Box>
+        {/* <Box>
           <AspectRatio w='100%' ratio={16 / 9}>
             <Image
               source={{
@@ -33,7 +34,7 @@ export default function About() {
               alt='image'
             />
           </AspectRatio>
-        </Box>
+        </Box> */}
         <Stack p='4' space={3}>
           <Stack space={2}>
             <Heading size='md' ml='-1'>
@@ -54,7 +55,7 @@ export default function About() {
               Created with ❤
             </Text>
           </Stack>
-          <Text fontWeight='400'>
+          <Text ml='-0.5' mt='-1' fontWeight='400'>
             Contact us at Github:{' '}
             <Text
               fontWeight='500'
@@ -66,7 +67,7 @@ export default function About() {
           </Text>
         </Stack>
       </Box>
-      <StatusBar style='dark' />
+      <StatusBar style='light' />
     </Box>
   );
 }
