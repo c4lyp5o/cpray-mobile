@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  Animated,
   Box,
   Center,
   Text,
@@ -17,7 +16,7 @@ import { getProfile } from '../lib/Profile';
 import { getData, storeData, timeReminder } from '../lib/Helper';
 
 export default function Prayertimes({ setLoading, setShowZonePicker }) {
-  const { appState, setState, state } = useNNWSStore();
+  const { setState, state } = useNNWSStore();
   const refZone = useRef(null);
   const tempReminderData = useRef();
   const tempTimesData = useRef();
@@ -43,13 +42,13 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
 
   useFocusEffect(
     useCallback(() => {
-      if (counter.current === 1) {
-        console.log('PRAYERTIMES: counter is', counter.current);
-        focusEffectService();
-        setTimeout(() => {
-          intervalService();
-        }, 500);
-      }
+      // if (counter.current === 1) {
+      console.log('PRAYERTIMES: counter is', counter.current);
+      focusEffectService();
+      // setTimeout(() => {
+      //   intervalService();
+      // }, 500);
+      // }
       return () => {
         console.log('PRAYERTIMES: NOT IN FOCUS');
       };
@@ -96,31 +95,34 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
         console.log(e);
       }
     };
-    // const intervalService = () => {
-    //   // console.log('running interval:' + prevInt);
-    //   setTimeNow(new Date());
-    //   timeReminder(tempTimesData.current)
-    //     .then((timeReminderData) => {
-    //       tempReminderData.current = timeReminderData;
-    //     })
-    //     .catch((error) => {
-    //       console.log(error);
-    //     });
-    // };
+    const intervalService = () => {
+      // console.log('running interval:' + prevInt);
+      // setTimeNow(new Date());
+      setState((prevState) => ({ ...prevState, yourTime: new Date() }));
+      timeReminder(tempTimesData.current)
+        .then((timeReminderData) => {
+          tempReminderData.current = timeReminderData;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    };
     // cacheService();
     fetchTimes().then(() => {
       setTimeout(() => {
         setTimesLoading(false);
       }, 200);
-      setTimeout(() => {
-        saveToStore();
-      }, 2000);
+      // setTimeout(() => {
+      //   saveToStore();
+      // }, 2000);
     });
-    // const prevInt = setInterval(() => intervalService(), 60000);
-    // console.log('Prayertimes interval set to: ' + prevInt);
+    const prevInt = setInterval(() => intervalService(), 60000);
+    console.log('Prayertimes interval set to: ' + prevInt);
     return () => {
-      // clearInterval(prevInt);
-      console.log(`PRAYERTIMES: Prayertimes UNMOUNTED`);
+      clearInterval(prevInt);
+      console.log(
+        `PRAYERTIMES: Prayertimes UNMOUNTED. Clearing interval: ${prevInt}`
+      );
     };
   }, []);
 
@@ -181,20 +183,20 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
     );
   }
 
-  if (appState.current === 'active' && counter.current === 0) {
-    console.log(
-      'PRAYERTIMES: from background, calling focusEffectService and intervalService'
-    );
-    focusEffectService();
-    setTimeout(() => {
-      intervalService();
-    }, 500);
-    counter.current += 1;
-  }
+  // if (appState.current === 'active' && counter.current === 0) {
+  //   console.log(
+  //     'PRAYERTIMES: from background, calling focusEffectService and intervalService'
+  //   );
+  //   focusEffectService();
+  //   setTimeout(() => {
+  //     intervalService();
+  //   }, 500);
+  //   counter.current += 1;
+  // }
 
-  if (appState.current === 'background' && counter.current === 1) {
-    counter.current = 0;
-  }
+  // if (appState.current === 'background' && counter.current === 1) {
+  //   counter.current = 0;
+  // }
 
   return (
     <Box w='full'>
