@@ -4,7 +4,7 @@ import { useNNWSStore } from '../lib/Context';
 
 export default function FetchService() {
   const {
-    BACKGROUND_FETCH_TASK_TEST,
+    BACKGROUND_FETCH_TASK,
     registerBackgroundFetchAsyncTest,
     unregisterBackgroundFetchAsyncTest,
     checkBackgroundFetchStatusAsync,
@@ -24,7 +24,7 @@ export default function FetchService() {
       <Text fontSize='xs'>
         Background fetch task name:{' '}
         <Text fontSize='xs'>
-          {bgIsRegistered ? BACKGROUND_FETCH_TASK_TEST : 'Not registered yet!'}
+          {bgIsRegistered ? BACKGROUND_FETCH_TASK : 'Not registered yet!'}
         </Text>
       </Text>
       <Button

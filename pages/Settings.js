@@ -15,16 +15,10 @@ import { useNNWSStore } from '../lib/Context';
 import FetchService from '../components/Fetch';
 import NotificationService from '../components/Notifications';
 import LocationService from '../components/Location';
-import {
-  getData,
-  storeData,
-  hardReset,
-  getTimeDifference,
-} from '../lib/Helper';
+import { getData, hardReset } from '../lib/Helper';
 
 export default function Settings() {
-  const { turnOffNotifications, turnOnNotifications } = useNNWSStore();
-  const toast = useToast();
+  const { turnOffNotifications, turnOnNotifications, toast } = useNNWSStore();
   const [tempZone, setTempZone] = useState(null);
   const [settings, setSettings] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -43,7 +37,7 @@ export default function Settings() {
     try {
       const dataStore = await getData('yourSettings');
       const zoneStore = await getData('yourZone');
-      if (!dataStore && !zoneStore) {
+      if (!zoneStore) {
         setSettings('off');
         setTempZone(null);
       } else {

@@ -14,7 +14,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -32,9 +34,16 @@
       [
         "expo-notifications",
         {
-          "sounds": ["./assets/azan.wav"]
+          "sounds": [
+            "./assets/azan.wav"
+          ]
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "03e9e1c1-3809-44c1-b23a-a7cacb5e2fbe"
+      }
+    }
   }
 }

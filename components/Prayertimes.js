@@ -44,7 +44,9 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
     useCallback(() => {
       // if (counter.current === 1) {
       console.log('PRAYERTIMES: counter is', counter.current);
-      focusEffectService();
+      focusEffectService().then(() => {
+        intervalService();
+      });
       // setTimeout(() => {
       //   intervalService();
       // }, 500);
