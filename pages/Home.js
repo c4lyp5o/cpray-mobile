@@ -5,6 +5,8 @@ import { useNNWSStore } from '../lib/Context';
 import Intro from '../components/Intro';
 import Zonepicker from '../components/Zonepicker';
 import Prayertimes from '../components/Prayertimes';
+import Loading from '../components/Loading';
+import Error from '../components/Error';
 import { getData } from '../lib/Helper';
 
 export default function Home() {
@@ -12,6 +14,7 @@ export default function Home() {
   const refZone = useRef(null);
   const [showZonePicker, setShowZonePicker] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     console.log('-------------this is the start of the app--------------');
@@ -43,23 +46,28 @@ export default function Home() {
       // }));
       // });
       const zone = await getData('yourZone');
-      if (zone) {
-        console.log('HOME: zone is', zone);
-        setState((prevState) => ({
-          ...prevState,
-          yourZone: zone,
-          yourTime: new Date(),
-        }));
-        setTimeout(() => {
-          setLoading(false);
+
+      try {
+        if (zone) {
+          setState((prevState) => ({
+            ...prevState,
+            yourZone: zone,
+            yourTime: new Date(),
+          }));
+          console.log('HOME: zone is', zone);
           setShowZonePicker(false);
-        }, 300);
-      } else {
-        console.log('HOME: No zone data');
+        } else {
+          console.log('HOME: No zone data');
+          setShowZonePicker(true);
+        }
+      } catch (error) {
+        console.log(error);
+        setError(true);
+      } finally {
         setLoading(false);
-        setShowZonePicker(true);
       }
     };
+
     getStoredData();
     // .then(() => {
     //   if (!zone) {
@@ -75,13 +83,9 @@ export default function Home() {
     // });
   }, []);
 
-  if (loading) {
-    return (
-      <Box flex={1} justifyContent='center' alignItems='center'>
-        <Spinner size='lg' color='violet.500' />
-      </Box>
-    );
-  }
+  if (loading) return <Loading />;
+
+  if (error) return <Error func={getStoredData} />;
 
   return (
     <Box

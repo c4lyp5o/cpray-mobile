@@ -12,9 +12,12 @@ import {
   useToast,
 } from 'native-base';
 import { useNNWSStore } from '../lib/Context';
-import FetchService from '../components/Fetch';
-import NotificationService from '../components/Notifications';
-import LocationService from '../components/Location';
+// import FetchService from '../components/Fetch';
+// import NotificationService from '../components/Notifications';
+// import LocationService from '../components/Location';
+import FetchService from '../modules/Fetch';
+import NotificationService from '../modules/Notifications';
+import LocationService from '../modules/Location';
 import { getData, hardReset } from '../lib/Helper';
 
 export default function Settings() {
@@ -46,35 +49,25 @@ export default function Settings() {
       }
     } catch (error) {
       console.log(error);
+      // Consider adding more robust error handling here
+    } finally {
+      setLoading(false);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
       console.log('SETTINGS: in focus');
-      getSettings().then(() => {
-        // setTempZone(state.yourZone);
-        setLoading(false);
-      });
+      getSettings();
       return () => {
         console.log('SETTINGS: not in focus');
-        getSettings().then(() => {
-          // setTempZone(state.yourZone);
-          setLoading(false);
-        });
+        getSettings();
       };
     }, [])
   );
 
   useEffect(() => {
-    getSettings()
-      // .then(() => {
-      //   setTempZone(state.yourZone);
-      // })
-      .then(() => {
-        setLoading(false);
-      });
-    // forceRerender();
+    getSettings();
     return () => {};
   }, [settings]);
 
@@ -129,7 +122,6 @@ export default function Settings() {
               <Box position='relative' left='100%'>
                 <Radio.Group
                   name='soundSettings'
-                  defaultValue={settings}
                   value={settings}
                   onChange={async (value) => {
                     setSettings(value);
@@ -187,7 +179,7 @@ export default function Settings() {
           </Stack>
         </Stack>
       </Box>
-      <Box
+      {/* <Box
         w='90%'
         mt={3}
         rounded='lg'
@@ -209,12 +201,10 @@ export default function Settings() {
           backgroundColor: 'gray.50',
         }}
       >
-        {/* Development Tools */}
         <FetchService />
         <NotificationService />
         <LocationService />
-        {/* Development Tools */}
-      </Box>
+      </Box> */}
       <StatusBar style='light' />
     </Box>
   );

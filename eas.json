@@ -7,18 +7,15 @@
       "developmentClient": true,
       "distribution": "internal"
     },
-    "local": {
+    "sideload": {
       "android": {
         "buildType": "apk"
       }
     },
-    "preview2": {
+    "preview": {
       "android": {
         "gradleCommand": ":app:assembleRelease"
       }
-    },
-    "dev-client": {
-      "developmentClient": true
     },
     "production": {}
   },

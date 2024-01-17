@@ -37,9 +37,7 @@ export default function About() {
         </Box> */}
         <Stack p='4' space={3}>
           <Stack space={2}>
-            <Heading size='md' ml='-1'>
-              No Nonsense Waktu Solat
-            </Heading>
+            <Heading size='md'>No Nonsense Waktu Solat</Heading>
             <Text
               fontSize='xs'
               _light={{
@@ -49,13 +47,11 @@ export default function About() {
                 color: 'violet.400',
               }}
               fontWeight='500'
-              ml='-0.5'
-              mt='-1'
             >
               Created with ❤
             </Text>
           </Stack>
-          <Text ml='-0.5' mt='-1' fontWeight='400'>
+          <Text fontWeight='400'>
             Contact us at Github:{' '}
             <Text
               fontWeight='500'

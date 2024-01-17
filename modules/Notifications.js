@@ -42,15 +42,16 @@ export default function NotificationService() {
   }, []);
 
   return (
-    <Box>
+    <Box mt={2} width='90%'>
       <Box mb='2'>
-        <Button shadow={2} onPress={schedulePushNotification}>
+        <Button shadow={2} width='100%' onPress={schedulePushNotification}>
           Trigger Local Notifications
         </Button>
       </Box>
       <Box mb='2'>
         <Button
           shadow={2}
+          width='100%'
           onPress={async () => {
             await Notifications.cancelAllScheduledNotificationsAsync();
           }}
@@ -61,6 +62,7 @@ export default function NotificationService() {
       <Box mb='2'>
         <Button
           shadow={2}
+          width='100%'
           onPress={async () => {
             const temp = await checkNotificationStatus();
             setNotfCount(temp);
@@ -69,7 +71,7 @@ export default function NotificationService() {
           Check Present Notifications
         </Button>
         {notfCount ? (
-          <Text marginTop={3}>
+          <Text textAlign='center' mt={2} mb={2} fontSize='xs'>
             {notfCount.map((item, index) => {
               return (
                 <Text key={index}>
@@ -81,7 +83,9 @@ export default function NotificationService() {
             })}
           </Text>
         ) : (
-          <Text>No scheduled notif</Text>
+          <Text textAlign='center' mt={2} fontSize='xs'>
+            No scheduled notifications
+          </Text>
         )}
       </Box>
     </Box>

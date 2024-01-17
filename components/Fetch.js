@@ -12,40 +12,53 @@ export default function FetchService() {
     bgFetchStatus,
   } = useNNWSStore();
 
+  const createTestBackgroundFetchTask = async () => {
+    try {
+      await registerBackgroundFetchAsyncTest();
+      await checkBackgroundFetchStatusAsync();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const unregisterBackgroundFetchTask = async () => {
+    try {
+      await unregisterBackgroundFetchAsyncTest();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     checkBackgroundFetchStatusAsync();
   }, [bgIsRegistered]);
 
   return (
-    <Box mt={2}>
-      <Text fontSize='xs'>
+    <Box mt={2} width='90%'>
+      <Text textAlign='center' fontSize='xs'>
         Background fetch status: <Text fontSize='xs'>{bgFetchStatus}</Text>
       </Text>
-      <Text fontSize='xs'>
+      <Text textAlign='center' fontSize='xs'>
         Background fetch task name:{' '}
         <Text fontSize='xs'>
           {bgIsRegistered ? BACKGROUND_FETCH_TASK : 'Not registered yet!'}
         </Text>
       </Text>
       <Button
+        width='100%'
         shadow='2'
-        onPress={async () => {
-          await registerBackgroundFetchAsyncTest();
-          await checkBackgroundFetchStatusAsync();
-        }}
+        onPress={createTestBackgroundFetchTask}
         size='xs'
-        mt={1}
+        mt={2}
       >
         Test BG Fetch (1 min)
       </Button>
       <Button
+        width='100%'
         shadow='2'
-        onPress={async () => {
-          await unregisterBackgroundFetchAsyncTest();
-          await checkBackgroundFetchStatusAsync();
-        }}
+        onPress={unregisterBackgroundFetchTask}
         size='xs'
-        mt={1}
+        mt={2}
       >
         Unregister BG Fetch
       </Button>

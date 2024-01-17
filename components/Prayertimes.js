@@ -9,11 +9,13 @@ import {
   HStack,
   Stack,
   Heading,
-  Spinner,
+  Flex,
 } from 'native-base';
 import { useNNWSStore } from '../lib/Context';
 import { getProfile } from '../lib/Profile';
-import { getData, storeData, timeReminder } from '../lib/Helper';
+import { getData, storeData, timeReminder, log } from '../lib/Helper';
+import Loading from './Loading';
+import Error from './Error';
 
 export default function Prayertimes({ setLoading, setShowZonePicker }) {
   const { setState, state } = useNNWSStore();
@@ -23,6 +25,119 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
   const counter = useRef(1);
   const [timesError, setTimesError] = useState(null);
   const [timesLoading, setTimesLoading] = useState(true);
+  const [retry, setRetry] = useState(false);
+
+  const retryFetch = async () => {
+    setTimesLoading(true);
+    setTimesError(null);
+    setRetry(true);
+  };
+
+  const fetchTimes = async () => {
+    try {
+      console.log('PRAYERTIMES: Fetching times');
+      const data = await fetch(
+        `https://api.waktusolat.me/waktusolat/today/${state.yourZone}`
+      );
+      const json = await data.json();
+      refZone.current = state.yourZone;
+      setState((prevState) => ({ ...prevState, yourTimes: json }));
+      tempTimesData.current = json;
+      const tempRemind = await timeReminder(json);
+      setState((prevState) => ({ ...prevState, yourReminder: tempRemind }));
+      tempReminderData.current = tempRemind;
+    } catch (error) {
+      console.log(error);
+      setTimesError(error);
+    } finally {
+      setTimeout(() => {
+        setTimesLoading(false);
+      }, 500);
+      // setTimeout(() => {
+      //   saveToStore();
+      // }, 2000);
+    }
+  };
+
+  const cacheService = async () => {
+    const timesData = await getData('yourTimes');
+    if (timesData) {
+      console.log('Using stored times data');
+      setTimesLoading(false);
+    } else {
+      console.log('No times data');
+      fetchTimes(); // saved to async storage
+    }
+  };
+
+  const saveToStore = async () => {
+    try {
+      let testSave = {};
+      testSave = { ...testSave, ...state };
+      await storeData('yourData', testSave);
+      // await storeData('yourZone', state.yourZone);
+      await storeData('yourTimes', state.yourTimes);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const focusEffectService = async () => {
+    try {
+      const res = await getData('yourZone');
+      console.log('PRAYERTIMES: focuseffect checking zone:', res);
+      if (!res) {
+        setTimesLoading(true);
+        setLoading(true);
+        setShowZonePicker(true);
+        setTimeout(() => {
+          setLoading(false);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error in focusEffectService:', error);
+    } finally {
+      intervalService();
+    }
+  };
+
+  const intervalService = async () => {
+    console.log('PRAYERTIMES: interval service called');
+    setState((prevState) => ({ ...prevState, yourTime: new Date() }));
+
+    if (tempTimesData.current) {
+      try {
+        const timeReminderData = await timeReminder(tempTimesData.current);
+        tempReminderData.current = timeReminderData;
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      console.log('PRAYERTIMES: tempTimesData.current is null');
+    }
+  };
+
+  useEffect(() => {
+    // cacheService();
+    fetchTimes();
+    const prevInt = setInterval(() => intervalService(), 60000);
+    console.log('Prayertimes interval set to: ' + prevInt);
+    return () => {
+      clearInterval(prevInt);
+      console.log(
+        `PRAYERTIMES: Prayertimes UNMOUNTED. Clearing interval: ${prevInt}`
+      );
+    };
+  }, [retry]);
+
+  // useEffect(() => {
+  //   const saveAllData = async () => {
+  //     let tempData = { ...state };
+  //     await storeData('yourData', tempData);
+  //     console.log(tempData);
+  //   };
+  //   console.log('times has changed');
+  // }, [state.yourTimes]);
 
   // useFocusEffect(
   //   useCallback(() => {
@@ -44,9 +159,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
     useCallback(() => {
       // if (counter.current === 1) {
       console.log('PRAYERTIMES: counter is', counter.current);
-      focusEffectService().then(() => {
-        intervalService();
-      });
+      focusEffectService();
       // setTimeout(() => {
       //   intervalService();
       // }, 500);
@@ -57,133 +170,9 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
     }, [])
   );
 
-  useEffect(() => {
-    const fetchTimes = async () => {
-      try {
-        console.log('PRAYERTIMES: Fetching times');
-        const data = await fetch(
-          `https://api.waktusolat.me/waktusolat/today/${state.yourZone}`
-        );
-        const json = await data.json();
-        refZone.current = state.yourZone;
-        setState((prevState) => ({ ...prevState, yourTimes: json }));
-        tempTimesData.current = json;
-        const tempRemind = await timeReminder(json);
-        setState((prevState) => ({ ...prevState, yourReminder: tempRemind }));
-        tempReminderData.current = tempRemind;
-      } catch (e) {
-        console.log(e);
-        setTimesError(e);
-      }
-    };
-    const cacheService = async () => {
-      const timesData = await getData('yourTimes');
-      if (timesData) {
-        console.log('Using stored times data');
-        setTimesLoading(false);
-      } else {
-        console.log('No times data');
-        fetchTimes(); // saved to async storage
-      }
-    };
-    const saveToStore = async () => {
-      try {
-        let testSave = {};
-        testSave = { ...testSave, ...state };
-        await storeData('yourData', testSave);
-        // await storeData('yourZone', state.yourZone);
-        await storeData('yourTimes', state.yourTimes);
-      } catch (e) {
-        console.log(e);
-      }
-    };
-    const intervalService = () => {
-      // console.log('running interval:' + prevInt);
-      // setTimeNow(new Date());
-      setState((prevState) => ({ ...prevState, yourTime: new Date() }));
-      timeReminder(tempTimesData.current)
-        .then((timeReminderData) => {
-          tempReminderData.current = timeReminderData;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    };
-    // cacheService();
-    fetchTimes().then(() => {
-      setTimeout(() => {
-        setTimesLoading(false);
-      }, 200);
-      // setTimeout(() => {
-      //   saveToStore();
-      // }, 2000);
-    });
-    const prevInt = setInterval(() => intervalService(), 60000);
-    console.log('Prayertimes interval set to: ' + prevInt);
-    return () => {
-      clearInterval(prevInt);
-      console.log(
-        `PRAYERTIMES: Prayertimes UNMOUNTED. Clearing interval: ${prevInt}`
-      );
-    };
-  }, []);
+  if (timesLoading) return <Loading />;
 
-  // useEffect(() => {
-  //   const saveAllData = async () => {
-  //     let tempData = { ...state };
-  //     await storeData('yourData', tempData);
-  //     console.log(tempData);
-  //   };
-  //   console.log('times has changed');
-  // }, [state.yourTimes]);
-
-  const focusEffectService = async () => {
-    getData('yourZone').then((res) => {
-      console.log('PRAYERTIMES: focuseffect checking zone:', res);
-      if (!res) {
-        setTimesLoading(true);
-        setLoading(true);
-        setShowZonePicker(true);
-        setTimeout(() => {
-          setLoading(false);
-        }, 200);
-      }
-    });
-  };
-
-  const intervalService = () => {
-    console.log('PRAYERTIMES: interval service called');
-    setState((prevState) => ({ ...prevState, yourTime: new Date() }));
-    timeReminder(tempTimesData.current)
-      .then((timeReminderData) => {
-        tempReminderData.current = timeReminderData;
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  if (timesLoading) {
-    return (
-      <Box
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Spinner size='lg' color='violet.500' />
-      </Box>
-    );
-  }
-
-  if (timesError) {
-    return (
-      <Box flex={1} justifyContent='center' alignItems='center'>
-        <Text>Error: {timesError.message}</Text>;
-      </Box>
-    );
-  }
+  if (timesError) return <Error func={retryFetch} />;
 
   // if (appState.current === 'active' && counter.current === 0) {
   //   console.log(
@@ -203,7 +192,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
   return (
     <Box w='full'>
       <Box>
-        <AspectRatio w='100%' maxH='full' ratio={16 / 9}>
+        <AspectRatio w='full' ratio={16 / 9}>
           <Image
             source={{
               uri: getProfile(state.yourZone).picture,
@@ -231,9 +220,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
       </Box>
       <Stack p='4' space={3}>
         <Stack space={2}>
-          <Heading size='md' ml='-1'>
-            {state.yourTimes.zone}
-          </Heading>
+          <Heading size='md'>{state.yourTimes.zone}</Heading>
           <Text
             fontSize='md'
             _light={{
@@ -243,7 +230,6 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
               color: 'violet.400',
             }}
             fontWeight='500'
-            ml='-0.5'
             mt='-1'
           >
             {state.yourTimes.negeri}
@@ -257,7 +243,6 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
               color: 'violet.400',
             }}
             fontWeight='500'
-            ml='-0.5'
             mt='-1'
           >
             {state.yourTimes.today.day.split(' / ')[0]},{' '}
@@ -284,15 +269,13 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
               backgroundColor: 'gray.50',
             }}
           >
-            <Stack p='4' space={3}>
-              <Stack space={2}>
-                <Heading size='2xl' ml='-1' textAlign='center'>
-                  {new Date().toLocaleTimeString('en-GB').slice(0, 5)}
-                </Heading>
-              </Stack>
+            <Stack p='2'>
+              <Heading size='2xl' textAlign='center'>
+                {new Date().toLocaleTimeString('en-GB').slice(0, 5)}
+              </Heading>
               <Text
                 fontSize='md'
-                textAlign={'center'}
+                textAlign='center'
                 _light={{
                   color: 'violet.500',
                 }}
@@ -300,8 +283,6 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                   color: 'violet.400',
                 }}
                 fontWeight='500'
-                ml='-0.5'
-                mt='-1'
               >
                 Solat seterusnya dalam{' '}
                 {tempReminderData.current.nextSolat.hours} jam,{' '}
@@ -310,10 +291,13 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
             </Stack>
           </Box>
         </Box>
-        <HStack space={3} justifyContent='center'>
-          <Box alignItems='center'>
+        <Flex direction='column' alignItems='center'>
+          <HStack space={3} justifyContent='center'>
             <Box
-              maxW='80'
+              mb={2}
+              width='100px'
+              height='80px'
+              alignItems='center'
               rounded='lg'
               overflow='hidden'
               borderColor='coolGray.200'
@@ -330,19 +314,20 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                 backgroundColor: 'gray.50',
               }}
             >
-              <Stack p='4' space={3}>
-                <Stack space={2}>
-                  <Heading size='md' ml='-1'>
+              <Stack p='4' space={1}>
+                <Stack>
+                  <Heading size='sm' textAlign='center'>
                     Subuh
                   </Heading>
                 </Stack>
                 <Text fontWeight='400'>{state.yourTimes.data[0].fajr}</Text>
               </Stack>
             </Box>
-          </Box>
-          <Box alignItems='center'>
             <Box
-              maxW='80'
+              mb={2}
+              width='100px'
+              height='80px'
+              alignItems='center'
               rounded='lg'
               overflow='hidden'
               borderColor='coolGray.200'
@@ -359,19 +344,20 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                 backgroundColor: 'gray.50',
               }}
             >
-              <Stack p='4' space={3}>
-                <Stack space={2}>
-                  <Heading size='md' ml='-1'>
+              <Stack p='4' space={1}>
+                <Stack>
+                  <Heading size='sm' textAlign='center'>
                     Syuruk
                   </Heading>
                 </Stack>
                 <Text fontWeight='400'>{state.yourTimes.data[0].syuruk}</Text>
               </Stack>
             </Box>
-          </Box>
-          <Box alignItems='center'>
             <Box
-              maxW='80'
+              mb={2}
+              width='100px'
+              height='80px'
+              alignItems='center'
               rounded='lg'
               overflow='hidden'
               borderColor='coolGray.200'
@@ -388,21 +374,21 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                 backgroundColor: 'gray.50',
               }}
             >
-              <Stack p='4' space={3}>
-                <Stack space={2}>
-                  <Heading size='md' ml='-1'>
+              <Stack p='4' space={1}>
+                <Stack>
+                  <Heading size='sm' textAlign='center'>
                     Zuhur
                   </Heading>
                 </Stack>
                 <Text fontWeight='400'>{state.yourTimes.data[0].dhuhr}</Text>
               </Stack>
             </Box>
-          </Box>
-        </HStack>
-        <HStack space={3} justifyContent='center'>
-          <Box alignItems='center'>
+          </HStack>
+          <HStack space={3} justifyContent='center'>
             <Box
-              maxW='80'
+              width='100px'
+              height='80px'
+              alignItems='center'
               rounded='lg'
               overflow='hidden'
               borderColor='coolGray.200'
@@ -419,19 +405,19 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                 backgroundColor: 'gray.50',
               }}
             >
-              <Stack p='4' space={3}>
-                <Stack space={2}>
-                  <Heading size='md' ml='-1'>
+              <Stack p='4' space={1}>
+                <Stack>
+                  <Heading size='sm' textAlign='center'>
                     Asar
                   </Heading>
                 </Stack>
                 <Text fontWeight='400'>{state.yourTimes.data[0].asr}</Text>
               </Stack>
             </Box>
-          </Box>
-          <Box alignItems='center'>
             <Box
-              maxW='80'
+              width='100px'
+              height='80px'
+              alignItems='center'
               rounded='lg'
               overflow='hidden'
               borderColor='coolGray.200'
@@ -448,19 +434,19 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                 backgroundColor: 'gray.50',
               }}
             >
-              <Stack p='4' space={3}>
-                <Stack space={2}>
-                  <Heading size='md' ml='-1'>
+              <Stack p='4' space={1}>
+                <Stack>
+                  <Heading size='sm' textAlign='center'>
                     Maghrib
                   </Heading>
                 </Stack>
                 <Text fontWeight='400'>{state.yourTimes.data[0].maghrib}</Text>
               </Stack>
             </Box>
-          </Box>
-          <Box alignItems='center'>
             <Box
-              maxW='80'
+              width='100px'
+              height='80px'
+              alignItems='center'
               rounded='lg'
               overflow='hidden'
               borderColor='coolGray.200'
@@ -477,17 +463,17 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                 backgroundColor: 'gray.50',
               }}
             >
-              <Stack p='4' space={3}>
-                <Stack space={2}>
-                  <Heading size='md' ml='-1'>
+              <Stack p='4' space={1}>
+                <Stack>
+                  <Heading size='sm' textAlign='center'>
                     Isha'
                   </Heading>
                 </Stack>
                 <Text fontWeight='400'>{state.yourTimes.data[0].isha}</Text>
               </Stack>
             </Box>
-          </Box>
-        </HStack>
+          </HStack>
+        </Flex>
       </Stack>
     </Box>
   );
