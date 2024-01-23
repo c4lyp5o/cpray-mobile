@@ -6,7 +6,6 @@ import Loading from './Loading';
 export default function NotificationService() {
   const {
     checkNotificationStatus,
-    notification,
     scheduleTestPushNotification,
     cancelAllScheduledNotificationsAsync,
   } = useNNWSStore();

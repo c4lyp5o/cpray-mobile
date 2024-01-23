@@ -4,13 +4,18 @@ import { useNNWSStore } from '../lib/Context';
 
 export default function Zonepicker({ refZone, setShowZonePicker }) {
   const { setState } = useNNWSStore();
+
   const handleSubmit = async () => {
-    await storeData('yourZone', refZone.current);
-    setState((prevState) => ({ ...prevState, yourZone: refZone.current }));
-    setTimeout(() => {
+    try {
+      await storeData('yourZone', refZone.current);
+      setState((prevState) => ({ ...prevState, yourZone: refZone.current }));
+    } catch (error) {
+      console.log(error);
+    } finally {
       setShowZonePicker(false);
-    }, 500);
+    }
   };
+
   return (
     <Box w='full'>
       <Select
@@ -174,13 +179,7 @@ export default function Zonepicker({ refZone, setShowZonePicker }) {
         <Select.Item value='wly01' label='Kuala Lumpur dan Putrajaya' />
         <Select.Item value='wly02' label='Labuan' />
       </Select>
-      <Button
-        marginTop={4}
-        backgroundColor='violet.500'
-        onPress={async () => {
-          await handleSubmit();
-        }}
-      >
+      <Button marginTop={4} backgroundColor='violet.500' onPress={handleSubmit}>
         Set Timezone
       </Button>
     </Box>

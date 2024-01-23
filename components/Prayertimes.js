@@ -33,6 +33,19 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
     setRetry(true);
   };
 
+  function formatTime(timeString) {
+    const [hours, minutes] = timeString.split(':');
+    return `${parseInt(hours)}:${minutes}`;
+  }
+
+  function formatETA(hours, minutes) {
+    if (hours === 0) {
+      return `${minutes} minit`;
+    } else {
+      return `${hours} jam ${minutes} minit`;
+    }
+  }
+
   const fetchTimes = async () => {
     try {
       console.log('PRAYERTIMES: Fetching times');
@@ -285,8 +298,10 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                 fontWeight='500'
               >
                 Solat seterusnya dalam{' '}
-                {tempReminderData.current.nextSolat.hours} jam,{' '}
-                {tempReminderData.current.nextSolat.minutes} minit
+                {formatETA(
+                  tempReminderData.current.nextSolat.hours,
+                  tempReminderData.current.nextSolat.minutes
+                )}
               </Text>
             </Stack>
           </Box>
@@ -320,7 +335,9 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Subuh
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{state.yourTimes.data[0].fajr}</Text>
+                <Text fontWeight='400'>
+                  {formatTime(state.yourTimes.data[0].fajr)}
+                </Text>
               </Stack>
             </Box>
             <Box
@@ -350,7 +367,9 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Syuruk
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{state.yourTimes.data[0].syuruk}</Text>
+                <Text fontWeight='400'>
+                  {formatTime(state.yourTimes.data[0].syuruk)}
+                </Text>
               </Stack>
             </Box>
             <Box
@@ -380,7 +399,9 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Zuhur
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{state.yourTimes.data[0].dhuhr}</Text>
+                <Text fontWeight='400'>
+                  {formatTime(state.yourTimes.data[0].dhuhr)}
+                </Text>
               </Stack>
             </Box>
           </HStack>
@@ -411,7 +432,9 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Asar
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{state.yourTimes.data[0].asr}</Text>
+                <Text fontWeight='400'>
+                  {formatTime(state.yourTimes.data[0].asr)}
+                </Text>
               </Stack>
             </Box>
             <Box
@@ -440,7 +463,9 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Maghrib
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{state.yourTimes.data[0].maghrib}</Text>
+                <Text fontWeight='400'>
+                  {formatTime(state.yourTimes.data[0].maghrib)}
+                </Text>
               </Stack>
             </Box>
             <Box
@@ -469,7 +494,9 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Isha'
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>{state.yourTimes.data[0].isha}</Text>
+                <Text fontWeight='400'>
+                  {formatTime(state.yourTimes.data[0].isha)}
+                </Text>
               </Stack>
             </Box>
           </HStack>
