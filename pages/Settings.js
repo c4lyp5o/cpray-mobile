@@ -1,40 +1,46 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import {
-  Box,
-  Button,
-  Text,
-  Stack,
-  HStack,
-  Radio,
-  Spinner,
-  useToast,
-} from 'native-base';
-import { useNNWSStore } from '../lib/Context';
+import { Box, Button, Text, Stack, HStack, Radio } from 'native-base';
+
+import Loading from '../components/Loading';
 // import FetchService from '../components/Fetch';
 // import NotificationService from '../components/Notifications';
 // import LocationService from '../components/Location';
 import FetchService from '../modules/Fetch';
 import NotificationService from '../modules/Notifications';
 import LocationService from '../modules/Location';
+
+import { useNNWSStore } from '../lib/Context';
 import { getData, hardReset } from '../lib/Helper';
+import simpleLogger from '../lib/Logger';
+import ToastService from '../lib/Toast';
 
 export default function Settings() {
-  const { turnOffNotifications, turnOnNotifications, toast } = useNNWSStore();
+  const { turnOffNotifications, turnOnNotifications } = useNNWSStore();
+  const { showToast } = ToastService();
   const [tempZone, setTempZone] = useState(null);
   const [settings, setSettings] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  async function harderReset() {
+  const setSoundSettings = async (value) => {
+    setSettings(value);
+    if (value === 'on') {
+      await turnOnNotifications();
+      showToast('Notifications turned on!');
+    } else {
+      await turnOffNotifications();
+      showToast('Notifications turned off!');
+    }
+  };
+
+  const harderReset = async () => {
     setSettings('off');
     setTempZone(null);
     await hardReset();
     await turnOffNotifications(settings);
-    toast.show({
-      description: 'Waktu solat telah direset',
-    });
-  }
+    showToast('Settings reset!');
+  };
 
   const getSettings = async () => {
     try {
@@ -48,8 +54,7 @@ export default function Settings() {
         setTempZone(zoneStore);
       }
     } catch (error) {
-      console.log(error);
-      // Consider adding more robust error handling here
+      simpleLogger('SETTINGS', error);
     } finally {
       setLoading(false);
     }
@@ -57,10 +62,10 @@ export default function Settings() {
 
   useFocusEffect(
     useCallback(() => {
-      console.log('SETTINGS: in focus');
+      simpleLogger('SETTINGS', 'In focus');
       getSettings();
       return () => {
-        console.log('SETTINGS: not in focus');
+        simpleLogger('SETTINGS', 'Not in focus');
         getSettings();
       };
     }, [])
@@ -71,19 +76,7 @@ export default function Settings() {
     return () => {};
   }, [settings]);
 
-  if (loading) {
-    return (
-      <Box
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Spinner size='lg' color='violet.500' />
-      </Box>
-    );
-  }
+  if (loading) return <Loading />;
 
   return (
     <Box alignItems='center' w='full'>
@@ -123,14 +116,7 @@ export default function Settings() {
                 <Radio.Group
                   name='soundSettings'
                   value={settings}
-                  onChange={async (value) => {
-                    setSettings(value);
-                    if (value === 'on') {
-                      await turnOnNotifications();
-                    } else {
-                      await turnOffNotifications();
-                    }
-                  }}
+                  onChange={(value) => setSoundSettings(value)}
                   accessibilityLabel='enable/disable sound'
                 >
                   <HStack space={4} w='100%' maxW='300px'>
@@ -169,9 +155,7 @@ export default function Settings() {
                 _dark={{
                   color: 'gray.400',
                 }}
-                onPress={async () => {
-                  await harderReset();
-                }}
+                onPress={harderReset}
               >
                 Reset
               </Button>

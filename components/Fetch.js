@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Text, Box, Button } from 'native-base';
 import { useNNWSStore } from '../lib/Context';
+import simpleLogger from '../lib/Logger';
 
 export default function FetchService() {
   const {
@@ -17,7 +18,7 @@ export default function FetchService() {
       await registerBackgroundFetchAsyncTest();
       await checkBackgroundFetchStatusAsync();
     } catch (error) {
-      console.log(error);
+      simpleLogger('FETCH', error);
     }
   };
 
@@ -25,7 +26,7 @@ export default function FetchService() {
     try {
       await unregisterBackgroundFetchAsyncTest();
     } catch (error) {
-      console.log(error);
+      simpleLogger('FETCH', error);
     }
   };
 

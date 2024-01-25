@@ -12,9 +12,7 @@ export default function DrawerContent(props) {
       {/*Top Large Image */}
       <Center marginTop='15%'>
         <Image
-          source={{
-            uri: 'https://images.cdn4.stockunlimited.net/preview1300/moon-and-stars_1284710.jpg',
-          }}
+          source={require('../assets/icon.png')}
           alt='image'
           resizeMode='center'
           w={100}

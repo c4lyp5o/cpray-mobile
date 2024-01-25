@@ -1,6 +1,8 @@
 import { Box, Button, Text, Spinner } from 'native-base';
 import { useState, useEffect } from 'react';
 import { useNNWSStore } from '../lib/Context';
+import simpleLogger from '../lib/Logger';
+
 import Loading from './Loading';
 
 export default function NotificationService() {
@@ -17,7 +19,7 @@ export default function NotificationService() {
       await cancelAllScheduledNotificationsAsync();
       setNotfCount(null);
     } catch (error) {
-      console.log(error);
+      simpleLogger('NOTIFICATIONS', error);
     }
   };
 
@@ -25,14 +27,17 @@ export default function NotificationService() {
     try {
       const temp = await checkNotificationStatus();
       if (temp) {
-        console.log(`NOTIFICATIONS: Got ${temp.length} notifications`);
+        simpleLogger(
+          'NOTIFICATIONS',
+          `Got ${JSON.stringify(temp)} as notifications`
+        );
         setNotfCount(temp);
       } else {
-        console.log(`NOTIFICATIONS: Got no notifications`);
+        simpleLogger('NOTIFICATIONS', 'Got no notifications');
         setNotfCount(null);
       }
     } catch (error) {
-      console.log(error);
+      simpleLogger('NOTIFICATIONS', error);
     }
   };
 
@@ -42,14 +47,14 @@ export default function NotificationService() {
         const temp = await checkNotificationStatus();
         setNotfCount(temp);
       } catch (error) {
-        console.log(error);
+        simpleLogger('NOTIFICATIONS', error);
       }
     };
 
     try {
       hereAndNow();
     } catch (error) {
-      console.log(error);
+      simpleLogger('NOTIFICATIONS', error);
     } finally {
       setLoading(false);
     }

@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { Spinner, Box } from 'native-base';
+import { Box } from 'native-base';
 import { StatusBar } from 'expo-status-bar';
 import { useNNWSStore } from '../lib/Context';
+import { getData } from '../lib/Helper';
+import simpleLogger from '../lib/Logger';
+
 import Intro from '../components/Intro';
 import Zonepicker from '../components/Zonepicker';
 import Prayertimes from '../components/Prayertimes';
 import Loading from '../components/Loading';
 import Error from '../components/Error';
-import { getData } from '../lib/Helper';
 
 export default function Home() {
   const { setState, state } = useNNWSStore();
@@ -16,65 +18,69 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  useEffect(() => {
-    console.log('-------------this is the start of the app--------------');
-    const getStoredData = async () => {
-      // try {
-      //   const data = await getData('yourData');
-      //   console.log('HOME: data:', data);
-      //   if (!data) {
-      //     return;
-      //   }
-      //   setState((prevState) => ({
-      //     ...prevState,
-      //     yourZone: data.yourZone,
-      //     yourTime: new Date(),
-      //   }));
-      // } catch (error) {
-      //   console.log(error);
-      // }
-      // await getData('yourData').then((data) => {
-      //   console.log('HOME: data:', data);
-      //   if (!data) {
-      //     return;
-      //   }
-      //   setZone(data.yourZone);
-      // setState((prevState) => ({
-      //   ...prevState,
-      //   yourZone: data.yourZone,
-      //   yourTime: new Date(),
-      // }));
-      // });
-      const zone = await getData('yourZone');
+  const getStoredData = async () => {
+    // try {
+    //   const data = await getData('yourData');
+    //   simpleLogger('HOME: data:', data);
+    //   if (!data) {
+    //     return;
+    //   }
+    //   setState((prevState) => ({
+    //     ...prevState,
+    //     yourZone: data.yourZone,
+    //     yourTime: new Date(),
+    //   }));
+    // } catch (error) {
+    //   simpleLogger('HOME', error);
+    // }
+    // await getData('yourData').then((data) => {
+    //   simpleLogger('HOME: data:', data);
+    //   if (!data) {
+    //     return;
+    //   }
+    //   setZone(data.yourZone);
+    // setState((prevState) => ({
+    //   ...prevState,
+    //   yourZone: data.yourZone,
+    //   yourTime: new Date(),
+    // }));
+    // });
+    const zone = await getData('yourZone');
 
-      try {
-        if (zone) {
-          setState((prevState) => ({
-            ...prevState,
-            yourZone: zone,
-            yourTime: new Date(),
-          }));
-          console.log('HOME: zone is', zone);
-          setShowZonePicker(false);
-        } else {
-          console.log('HOME: No zone data');
-          setShowZonePicker(true);
-        }
-      } catch (error) {
-        console.log(error);
-        setError(true);
-      } finally {
-        setLoading(false);
+    try {
+      if (zone) {
+        setState((prevState) => ({
+          ...prevState,
+          yourZone: zone,
+          yourTime: new Date(),
+        }));
+        simpleLogger('HOME', `zone is ${zone}`);
+        setShowZonePicker(false);
+      } else {
+        simpleLogger('HOME', 'No zone data');
+        setShowZonePicker(true);
       }
-    };
+    } catch (error) {
+      simpleLogger('HOME', error);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    simpleLogger(
+      'HOME',
+      '-------------this is the start of the app--------------'
+    );
 
     getStoredData();
     // .then(() => {
     //   if (!zone) {
-    //     console.log('HOME: No zone');
+    //     simpleLogger('HOME: No zone');
     //     setShowZonePicker(true);
     //   } else {
-    //     console.log('HOME: zone is, ', state.yourZone);
+    //     simpleLogger('HOME: zone is, ', state.yourZone);
     //     setShowZonePicker(false);
     //   }
     //   setTimeout(() => {

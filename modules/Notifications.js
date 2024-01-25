@@ -1,15 +1,14 @@
 import * as Notifications from 'expo-notifications';
-import { Box, Button, Text } from 'native-base';
+import { Platform, Box, Button, Text } from 'native-base';
 import React, { useState, useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Notifications.setNotificationHandler({
+//   handleNotification: async () => ({
+//     shouldShowAlert: true,
+//     shouldPlaySound: true,
+//     shouldSetBadge: true,
+//   }),
+// });
 
 export default function NotificationService() {
   const [notification, setNotification] = useState(false);
@@ -17,29 +16,77 @@ export default function NotificationService() {
   const notificationListener = useRef();
   const responseListener = useRef();
 
-  useEffect(() => {
-    registerForPushNotificationsAsync();
+  async function schedulePushNotification() {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Masuk Waktu',
+        body: 'Hayya alassolah',
+        data: { data: 'supposed to ada sound lah' },
+      },
+      trigger: { channelId: 'azan-app', seconds: 5 },
+    });
+  }
 
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        setNotification(notification);
+  async function registerForPushNotificationsAsync() {
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('azan-app', {
+        name: 'Azan App',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        sound: 'azan.wav',
+        lightColor: '#FF231F7C',
+        lockscreenVisibility:
+          Notifications.AndroidNotificationVisibility.PUBLIC,
+        bypassDnd: true,
       });
+    }
+    console.log('registered notification channel');
+  }
 
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
-      });
+  async function checkNotificationStatus() {
+    try {
+      let scheduledOnes = [];
+      scheduledOnes = await Notifications.getAllScheduledNotificationsAsync();
+      if (scheduledOnes.length > 0) {
+        console.log(
+          'scheduled notifications',
+          JSON.stringify(scheduledOnes, null, 2)
+        );
+        setNotfCount(scheduledOnes);
+      } else {
+        console.log('no scheduled notifications');
+        setNotfCount(null);
+      }
+    } catch (error) {
+      console.log('error', error);
+    } finally {
+      return scheduledOnes;
+    }
+  }
 
-    console.log('registered notification listeners');
+  // useEffect(() => {
+  //   registerForPushNotificationsAsync();
 
-    return () => {
-      console.log('unregistered listener');
-      Notifications.removeNotificationSubscription(
-        notificationListener.current
-      );
-      Notifications.removeNotificationSubscription(responseListener.current);
-    };
-  }, []);
+  //   notificationListener.current =
+  //     Notifications.addNotificationReceivedListener((notification) => {
+  //       setNotification(notification);
+  //     });
+
+  //   responseListener.current =
+  //     Notifications.addNotificationResponseReceivedListener((response) => {
+  //       console.log(response);
+  //     });
+
+  //   console.log('registered notification listeners');
+
+  //   return () => {
+  //     console.log('unregistered listener');
+  //     Notifications.removeNotificationSubscription(
+  //       notificationListener.current
+  //     );
+  //     Notifications.removeNotificationSubscription(responseListener.current);
+  //   };
+  // }, []);
 
   return (
     <Box mt={2} width='90%'>
@@ -65,6 +112,7 @@ export default function NotificationService() {
           width='100%'
           onPress={async () => {
             const temp = await checkNotificationStatus();
+            console.log('temp', temp);
             setNotfCount(temp);
           }}
         >
@@ -90,40 +138,4 @@ export default function NotificationService() {
       </Box>
     </Box>
   );
-}
-
-async function schedulePushNotification() {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Masuk Waktu',
-      body: 'Hayya alassolah',
-      data: { data: 'supposed to ada sound lah' },
-    },
-    trigger: { channelId: 'azan-app', seconds: 5 },
-  });
-}
-
-async function registerForPushNotificationsAsync() {
-  if (Platform.OS === 'android') {
-    Notifications.setNotificationChannelAsync('azan-app', {
-      name: 'Azan App',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      sound: 'azan.wav',
-      lightColor: '#FF231F7C',
-      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-      bypassDnd: true,
-    });
-  }
-  console.log('registered notification channel');
-}
-
-async function checkNotificationStatus() {
-  const scheduledOnes = await Notifications.getAllScheduledNotificationsAsync();
-  if (scheduledOnes.length > 0) {
-    console.log('scheduled notifications', scheduledOnes);
-    return scheduledOnes;
-  } else {
-    console.log('no scheduled notifications');
-  }
 }

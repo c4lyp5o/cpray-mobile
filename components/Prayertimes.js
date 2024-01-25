@@ -13,7 +13,9 @@ import {
 } from 'native-base';
 import { useNNWSStore } from '../lib/Context';
 import { getProfile } from '../lib/Profile';
-import { getData, storeData, timeReminder, log } from '../lib/Helper';
+import { getData, storeData, timeReminder } from '../lib/Helper';
+import simpleLogger from '../lib/Logger';
+
 import Loading from './Loading';
 import Error from './Error';
 
@@ -34,25 +36,34 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
   };
 
   function formatTime(timeString) {
-    const [hours, minutes] = timeString.split(':');
-    return `${parseInt(hours)}:${minutes}`;
+    try {
+      const [hours, minutes] = timeString.split(':');
+      return `${parseInt(hours)}:${minutes}`;
+    } catch (error) {
+      simpleLogger('PRAYERTIMES', error);
+    }
   }
 
   function formatETA(hours, minutes) {
-    if (hours === 0) {
-      return `${minutes} minit`;
-    } else {
-      return `${hours} jam ${minutes} minit`;
+    try {
+      if (hours === 0) {
+        return `${minutes} minit`;
+      } else {
+        return `${hours} jam ${minutes} minit`;
+      }
+    } catch (error) {
+      simpleLogger('PRAYERTIMES', error);
     }
   }
 
   const fetchTimes = async () => {
     try {
-      console.log('PRAYERTIMES: Fetching times');
+      simpleLogger('PRAYERTIMES', 'Fetching times in fg');
       const data = await fetch(
         `https://api.waktusolat.me/waktusolat/today/${state.yourZone}`
       );
       const json = await data.json();
+      await storeData('bgTimesData', json);
       refZone.current = state.yourZone;
       setState((prevState) => ({ ...prevState, yourTimes: json }));
       tempTimesData.current = json;
@@ -60,7 +71,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
       setState((prevState) => ({ ...prevState, yourReminder: tempRemind }));
       tempReminderData.current = tempRemind;
     } catch (error) {
-      console.log(error);
+      simpleLogger('PRAYERTIMES', error);
       setTimesError(error);
     } finally {
       setTimeout(() => {
@@ -72,33 +83,33 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
     }
   };
 
-  const cacheService = async () => {
-    const timesData = await getData('yourTimes');
-    if (timesData) {
-      console.log('Using stored times data');
-      setTimesLoading(false);
-    } else {
-      console.log('No times data');
-      fetchTimes(); // saved to async storage
-    }
-  };
+  // const cacheService = async () => {
+  //   const timesData = await getData('yourTimes');
+  //   if (timesData) {
+  //     simpleLogger('Using stored times data');
+  //     setTimesLoading(false);
+  //   } else {
+  //     simpleLogger('No times data');
+  //     fetchTimes(); // saved to async storage
+  //   }
+  // };
 
-  const saveToStore = async () => {
-    try {
-      let testSave = {};
-      testSave = { ...testSave, ...state };
-      await storeData('yourData', testSave);
-      // await storeData('yourZone', state.yourZone);
-      await storeData('yourTimes', state.yourTimes);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  // const saveToStore = async () => {
+  //   try {
+  //     let testSave = {};
+  //     testSave = { ...testSave, ...state };
+  //     await storeData('yourData', testSave);
+  //     // await storeData('yourZone', state.yourZone);
+  //     await storeData('yourTimes', state.yourTimes);
+  //   } catch (error) {
+  //     simpleLogger('PRAYERTIMES', error);
+  //   }
+  // };
 
   const focusEffectService = async () => {
     try {
       const res = await getData('yourZone');
-      console.log('PRAYERTIMES: focuseffect checking zone:', res);
+      simpleLogger('PRAYERTIMES', `focuseffect checking zone: ${res}`);
       if (!res) {
         setTimesLoading(true);
         setLoading(true);
@@ -115,7 +126,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
   };
 
   const intervalService = async () => {
-    console.log('PRAYERTIMES: interval service called');
+    simpleLogger('PRAYERTIMES', 'interval service called');
     setState((prevState) => ({ ...prevState, yourTime: new Date() }));
 
     if (tempTimesData.current) {
@@ -123,10 +134,10 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
         const timeReminderData = await timeReminder(tempTimesData.current);
         tempReminderData.current = timeReminderData;
       } catch (error) {
-        console.log(error);
+        simpleLogger('PRAYERTIMES', error);
       }
     } else {
-      console.log('PRAYERTIMES: tempTimesData.current is null');
+      simpleLogger('PRAYERTIMES', 'tempTimesData.current is null');
     }
   };
 
@@ -134,11 +145,12 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
     // cacheService();
     fetchTimes();
     const prevInt = setInterval(() => intervalService(), 60000);
-    console.log('Prayertimes interval set to: ' + prevInt);
+    simpleLogger('PRAYERTIMES', `Prayertimes interval set to: ${prevInt}`);
     return () => {
       clearInterval(prevInt);
-      console.log(
-        `PRAYERTIMES: Prayertimes UNMOUNTED. Clearing interval: ${prevInt}`
+      simpleLogger(
+        'PRAYERTIMES',
+        `Prayertimes UNMOUNTED. Clearing interval: ${prevInt}`
       );
     };
   }, [retry]);
@@ -147,9 +159,9 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
   //   const saveAllData = async () => {
   //     let tempData = { ...state };
   //     await storeData('yourData', tempData);
-  //     console.log(tempData);
+  //     simpleLogger(tempData);
   //   };
-  //   console.log('times has changed');
+  //   simpleLogger('times has changed');
   // }, [state.yourTimes]);
 
   // useFocusEffect(
@@ -157,13 +169,13 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
   //     if (counter.current === 0) {
   //       return;
   //     }
-  //     console.log('PRAYERTIMES: Prayertimes IN FOCUS');
+  //     simpleLogger('PRAYERTIMES: Prayertimes IN FOCUS');
   //     focusEffectService();
   //     setTimeout(() => {
   //       intervalService();
   //     }, 500);
   //     return () => {
-  //       console.log('PRAYERTIMES: Prayertimes NOT IN FOCUS');
+  //       simpleLogger('PRAYERTIMES: Prayertimes NOT IN FOCUS');
   //     };
   //   }, [])
   // );
@@ -171,14 +183,14 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
   useFocusEffect(
     useCallback(() => {
       // if (counter.current === 1) {
-      console.log('PRAYERTIMES: counter is', counter.current);
+      simpleLogger('PRAYERTIMES', `counter is ${counter.current}`);
       focusEffectService();
       // setTimeout(() => {
       //   intervalService();
       // }, 500);
       // }
       return () => {
-        console.log('PRAYERTIMES: NOT IN FOCUS');
+        simpleLogger('PRAYERTIMES', 'NOT IN FOCUS');
       };
     }, [])
   );
@@ -188,7 +200,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
   if (timesError) return <Error func={retryFetch} />;
 
   // if (appState.current === 'active' && counter.current === 0) {
-  //   console.log(
+  //   simpleLogger(
   //     'PRAYERTIMES: from background, calling focusEffectService and intervalService'
   //   );
   //   focusEffectService();
@@ -297,7 +309,10 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                 }}
                 fontWeight='500'
               >
-                Solat seterusnya dalam{' '}
+                <Text textTransform={'capitalize'}>
+                  {tempReminderData.current.nextSolat.name}
+                </Text>{' '}
+                akan masuk dalam{' '}
                 {formatETA(
                   tempReminderData.current.nextSolat.hours,
                   tempReminderData.current.nextSolat.minutes
@@ -335,7 +350,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Subuh
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>
+                <Text textAlign='center' fontWeight='400'>
                   {formatTime(state.yourTimes.data[0].fajr)}
                 </Text>
               </Stack>
@@ -367,7 +382,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Syuruk
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>
+                <Text textAlign='center' fontWeight='400'>
                   {formatTime(state.yourTimes.data[0].syuruk)}
                 </Text>
               </Stack>
@@ -399,7 +414,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Zuhur
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>
+                <Text textAlign='center' fontWeight='400'>
                   {formatTime(state.yourTimes.data[0].dhuhr)}
                 </Text>
               </Stack>
@@ -432,7 +447,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Asar
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>
+                <Text textAlign='center' fontWeight='400'>
                   {formatTime(state.yourTimes.data[0].asr)}
                 </Text>
               </Stack>
@@ -463,7 +478,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Maghrib
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>
+                <Text textAlign='center' fontWeight='400'>
                   {formatTime(state.yourTimes.data[0].maghrib)}
                 </Text>
               </Stack>
@@ -494,7 +509,7 @@ export default function Prayertimes({ setLoading, setShowZonePicker }) {
                     Isha'
                   </Heading>
                 </Stack>
-                <Text fontWeight='400'>
+                <Text textAlign='center' fontWeight='400'>
                   {formatTime(state.yourTimes.data[0].isha)}
                 </Text>
               </Stack>
