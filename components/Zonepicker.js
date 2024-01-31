@@ -1,6 +1,7 @@
 import { Box, Select, Button, CheckCircleIcon } from 'native-base';
 import { storeData } from '../lib/Helper';
 import { useNNWSStore } from '../lib/Context';
+import simpleLogger from '../lib/Logger';
 
 export default function Zonepicker({ refZone, setShowZonePicker }) {
   const { setState } = useNNWSStore();
@@ -10,7 +11,7 @@ export default function Zonepicker({ refZone, setShowZonePicker }) {
       await storeData('yourZone', refZone.current);
       setState((prevState) => ({ ...prevState, yourZone: refZone.current }));
     } catch (error) {
-      console.log(error);
+      simpleLogger('ZONEPICKER', error);
     } finally {
       setShowZonePicker(false);
     }
